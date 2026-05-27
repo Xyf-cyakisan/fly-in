@@ -34,25 +34,19 @@ COLORS = [
 ]
 
 
-class Parser(BaseModel):
+class MapConfig(BaseModel):
     nb_drones: int = Field(ge=1)
     start_hub: tuple[str, int, int]
     end_hub: tuple[str, int, int]
     hub: list[tuple[str, int, int]]
     connection: list[tuple[str, str]]
     metadata: dict[str, dict | None]
+    lines: dict[str, int]
 
     @classmethod
-    def parse(cls, map_name: str) -> "Parser":
-        try:
-            content, lines = cls._read_file(map_name)
-            return cls(**(cls._convert_content_to_dict(content, lines)))
-        except FileNotFoundError as e:
-            raise FileNotFoundError(e)
-        except PermissionError as e:
-            raise PermissionError(e)
-        except ValueError as e:
-            raise ValueError(e)
+    def parse(cls, map_name: str) -> "MapConfig":
+        content, lines = cls._read_file(map_name)
+        return cls(**(cls._convert_content_to_dict(content, lines)))
 
     @staticmethod
     def _read_file(map_name: str) -> list[str]:
@@ -84,7 +78,7 @@ class Parser(BaseModel):
         return list_data
 
     @classmethod
-    def _check_metadata(cls, line: str, line_number: int) -> dict[str, str] | None:
+    def _check_metadata(cls, line: list[str], line_number: int) -> dict[str, str] | None:
         VALID_METADATA = {
             "hub": {
                 "color": COLORS,
@@ -146,7 +140,8 @@ class Parser(BaseModel):
             "end_hub": [],
             "hub": [],
             "connection": [],
-            "metadata": {}
+            "metadata": {},
+            "lines": {}
         }
         if content[0].split(":")[0].strip(" ") != "nb_drones":
             raise ValueError("Error: first non-commentary or non-empty line must be nb_drones.")
@@ -173,12 +168,17 @@ class Parser(BaseModel):
                     metadata = cls._check_metadata(line, i)
                     if line[0] == "nb_drones":
                         dict_content["nb_drones"] = line_content[0]
+                        dict_content["lines"]["nb_drones"] = i
+                        dict_content["metadata"]["nb_drones"] = metadata
+
                     else:
                         type = line[0]
                         if line[0] not in "connection":
                             dict_content["metadata"][line_content[0]] = metadata
+                            dict_content["lines"][line_content[0]] = i
                         else:
-                            dict_content["metadata"][line[1]] = metadata
+                            dict_content["metadata"][line_content[0] + "-" + line_content[1]] = metadata
+                            dict_content["lines"][line_content[0] + "-" + line_content[1]] = i
                         dict_content[type].append(line_content)
                     values_to_pass[line[0]] = True
                     if len(dict_content["start_hub"]) > 1 or len(dict_content["end_hub"]) > 1:
@@ -192,19 +192,55 @@ class Parser(BaseModel):
         dict_content["end_hub"] = dict_content["end_hub"].pop()
         return dict_content
 
+    @model_validator(mode="after")
+    def _check_metadata_type(self) -> "MapConfig":
+        if self.metadata[self.start_hub[0]]:
+            if isinstance(self.metadata[self.start_hub[0]], dict) and self.metadata[self.start_hub[0]].get("max_drones", None):
+                try:
+                    self.metadata[self.start_hub[0]]["max_drones"] = int(self.metadata[self.start_hub[0]]["max_drones"])
+                    if self.metadata[self.start_hub[0]]["max_drones"] < self.nb_drones:
+                        raise ValueError
+                except ValueError:
+                    raise ValueError(f"Error (line {self.lines[self.start_hub[0]]}): max_drones for start_hub should be a positive integer higher or equal to nb_drones")
+        if self.metadata[self.end_hub[0]]:
+            if isinstance(self.metadata[self.end_hub[0]], dict) and self.metadata[self.end_hub[0]].get("max_drones", None):
+                try:
+                    self.metadata[self.end_hub[0]]["max_drones"] = int(self.metadata[self.end_hub[0]]["max_drones"])
+                    if self.metadata[self.end_hub[0]]["max_drones"] < self.nb_drones:
+                        raise ValueError
+                except ValueError:
+                    raise ValueError(f"Error (line {self.lines[self.end_hub[0]]}): max_drones for end_hub should be a positive integer higher or equal to nb_drones")
+        for hub in self.hub:
+            if isinstance(self.metadata[hub[0]], dict) and self.metadata[hub[0]].get("max_drones", None):
+                try:
+                    self.metadata[hub[0]]["max_drones"] = int(self.metadata[hub[0]]["max_drones"])
+                    if self.metadata[hub[0]]["max_drones"] <= 0:
+                        raise ValueError
+                except ValueError:
+                    raise ValueError(f"Error (line {self.lines[hub[0]]}): max_drones for hub should be a positive integer higher or equal to nb_drones")
+        for connection in self.connection:
+            if isinstance(self.metadata[connection[0] + "-" + connection[1]], dict) and self.metadata[connection[0] + "-" + connection[1]].get("max_link_capacity", None):
+                try:
+                    self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"] = int(self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"])
+                    if self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"] <= 0:
+                        raise ValueError
+                except ValueError:
+                    raise ValueError(f"Error (line {self.lines[connection[0] + "-" + connection[1]]}): max_link_capacity for connection should be a positive integer higher or equal to nb_drones")
+        return self
+
 
 if __name__ == "__main__":
     try:
-        parsed = Parser.parse("maps/hard/03_ultimate_challenge.txt")
+        parsed = MapConfig.parse("maps/hard/03_ultimate_challenge.txt")
     except Exception as e:
         print(e)
     else:
         print("START: ", parsed.start_hub, "metadata: ", parsed.metadata[parsed.start_hub[0]])
         print("end: ", parsed.end_hub, "metadata: ", parsed.metadata[parsed.end_hub[0]])
-        print("drones: ", parsed.nb_drones)
+        print("drones: ", parsed.nb_drones, "metadata: ", parsed.metadata["nb_drones"])
         print()
         for hub in parsed.hub:
             print("hub:", hub[0], hub[1], hub[2], "metadata: ", parsed.metadata[hub[0]])
         print()
         for connection in parsed.connection:
-            print("connection:", connection[0], connection[1], "metadata: ", parsed.metadata[connection[0]])
+            print("connection:", connection[0], connection[1], "metadata: ", parsed.metadata[connection[0] + "-" + connection[1]])

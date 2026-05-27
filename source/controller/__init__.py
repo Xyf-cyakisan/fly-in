@@ -1,2 +1,2 @@
-from .Parser import Parser
-__all__ = ["Parser"]
+from .MapConfig import MapConfig
+__all__ = ["MapConfig"]
