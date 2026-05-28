@@ -210,7 +210,7 @@ class MapConfig(BaseModel):
             "lines": {}
         }
         if content[0].split(":")[0].strip(" ") != "nb_drones":
-            raise ValueError("Error: first non-commentary or non-empty line must be nb_drones.")
+            raise ValueError("Error: first non-commentary and non-empty line must be nb_drones.")
         for i, line in zip(lines, content):
             if line.count(":") == 0:
                 raise ValueError(
