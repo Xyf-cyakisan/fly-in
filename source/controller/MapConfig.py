@@ -1,17 +1,4 @@
-from tkinter import S
 from typing import Any
-import sys
-try:
-    from pydantic import (
-        BaseModel,
-        Field,
-        model_validator,
-    )
-except ImportError:
-    print("\033c", end="")
-    print("Error: Pydantic not found.")
-    sys.exit(1)
-
 COLORS = [
     "red",
     "blue",
@@ -33,22 +20,27 @@ COLORS = [
 ]
 
 
-class MapConfig(BaseModel):
-    nb_drones: int = Field(ge=1)
-    start_hub: tuple[str, int, int]
-    end_hub: tuple[str, int, int]
-    hub: list[tuple[str, int, int]]
-    connection: list[tuple[str, str]]
-    metadata: dict[str, dict | None]
-    lines: dict[str, int]
+class MapConfig:
+    def __init__(self, nb_drones, start_hub, end_hub, hub, connection, metadata):
+        self.nb_drones = nb_drones
+        self.start_hub = start_hub
+        self.end_hub = end_hub
+        self.hub = hub
+        self.connection = connection
+        self.metadata = metadata
 
     @classmethod
     def parse(cls, map_name: str) -> "MapConfig":
         content, lines = cls._read_file(map_name)
         raw_data = cls._convert_content_to_dict(content, lines)
-        cls._all_types_covered(raw_data)
+        cls._all_data_types_covered(raw_data)
+        raw_data = cls._convert_hubs_value_type(raw_data)
+        raw_data = cls._convert_connections_value_type(raw_data)
         cls._check_hub_names(raw_data)
         cls._check_connections_duplicate(raw_data)
+        cls._check_metadata_type(raw_data)
+        cls._check_coordinates_duplicate(raw_data)
+        raw_data.pop("lines")
         return cls(**raw_data)
 
     @staticmethod
@@ -164,7 +156,7 @@ class MapConfig(BaseModel):
                     raise ValueError(f"Error (line {dict_content["lines"][connection[0] + '-' + connection[1]]}): '{connection[0] + '-' + connection[1]}' this connection already exists")
 
     @staticmethod
-    def _all_types_covered(dict_content) -> None:
+    def _all_data_types_covered(dict_content) -> None:
         values_to_pass: dict[str, bool] = {
             "nb_drones": False,
             "start_hub": False,
@@ -190,6 +182,41 @@ class MapConfig(BaseModel):
         else:
             dict_content["start_hub"] = dict_content["start_hub"].pop()
             dict_content["end_hub"] = dict_content["end_hub"].pop()
+
+    @staticmethod
+    def _convert_hubs_value_type(dict_content) -> dict:
+        try:
+            dict_content["nb_drones"] = int(dict_content["nb_drones"])
+            if dict_content["nb_drones"] <= 0:
+                raise ValueError
+        except ValueError:
+            raise ValueError(f"Error (line {dict_content['lines']['nb_drones']}): nb_drones needs to be a positive integer higher than 0")
+        try:
+            dict_content['start_hub'][1] = int(dict_content['start_hub'][1])
+            dict_content['start_hub'][2] = int(dict_content['start_hub'][2])
+            dict_content['start_hub'] = tuple(dict_content['start_hub'])
+        except ValueError:
+            raise ValueError(f"Error (line {dict_content['lines'][dict_content['start_hub'][0]]}): coordinates x and y need to be integers")
+        try:
+            dict_content['end_hub'][1] = int(dict_content['end_hub'][1])
+            dict_content['end_hub'][2] = int(dict_content['end_hub'][2])
+            dict_content['end_hub'] = tuple(dict_content['end_hub'])
+        except ValueError:
+            raise ValueError(f"Error (line {dict_content['lines'][dict_content['end_hub'][0]]}): coordinates x and y need to be integers")
+        try:
+            for i in range(len(dict_content['hub'])):
+                dict_content['hub'][i][1] = int(dict_content['hub'][i][1])
+                dict_content['hub'][i][2] = int(dict_content['hub'][i][2])
+                dict_content['hub'][i] = tuple(dict_content['hub'][i])
+        except ValueError:
+            raise ValueError(f"Error (line {dict_content['lines'][dict_content['hub'][i][0]]}): coordinates x and y need to be integers")
+        return dict_content
+
+    @staticmethod
+    def _convert_connections_value_type(dict_content) -> dict:
+        for i in range(len(dict_content['connection'])):
+            dict_content['connection'][i] = tuple(dict_content['connection'][i])
+        return dict_content
 
     @classmethod
     def _convert_content_to_dict(cls, content: list[str], lines) -> dict[str, Any]:
@@ -250,51 +277,48 @@ class MapConfig(BaseModel):
                         raise ValueError(f"Error (line {i}): Only 1 start_hub and end_hub")
         return dict_content
 
-    @model_validator(mode="after")
-    def _check_metadata_type(self) -> "MapConfig":
-        if self.metadata[self.start_hub[0]]:
-            if isinstance(self.metadata[self.start_hub[0]], dict) and self.metadata[self.start_hub[0]].get("max_drones", None):
+    def _check_metadata_type(dict_content) -> None:
+        if dict_content['metadata'][dict_content['start_hub'][0]]:
+            if isinstance(dict_content['metadata'][dict_content['start_hub'][0]], dict) and dict_content['metadata'][dict_content['start_hub'][0]].get("max_drones", None):
                 try:
-                    self.metadata[self.start_hub[0]]["max_drones"] = int(self.metadata[self.start_hub[0]]["max_drones"])
+                    dict_content['metadata'][dict_content['start_hub'][0]]["max_drones"] = int(dict_content['metadata'][dict_content['start_hub'][0]]["max_drones"])
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[self.start_hub[0]]}): max_drones for start_hub should be a positive integer")
-        if self.metadata[self.end_hub[0]]:
-            if isinstance(self.metadata[self.end_hub[0]], dict) and self.metadata[self.end_hub[0]].get("max_drones", None):
+                    raise ValueError(f"Error (line {dict_content['lines'][dict_content['start_hub'][0]]}): max_drones for start_hub should be a positive integer")
+        if dict_content['metadata'][dict_content['end_hub'][0]]:
+            if isinstance(dict_content['metadata'][dict_content['end_hub'][0]], dict) and dict_content['metadata'][dict_content['end_hub'][0]].get("max_drones", None):
                 try:
-                    self.metadata[self.end_hub[0]]["max_drones"] = int(self.metadata[self.end_hub[0]]["max_drones"])
+                    dict_content['metadata'][dict_content['end_hub'][0]]["max_drones"] = int(dict_content['metadata'][dict_content['end_hub'][0]]["max_drones"])
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[self.end_hub[0]]}): max_drones for end_hub should be a positive integer")
-        for hub in self.hub:
-            if isinstance(self.metadata[hub[0]], dict) and self.metadata[hub[0]].get("max_drones", None):
+                    raise ValueError(f"Error (line {dict_content['lines'][dict_content['end_hub'][0]]}): max_drones for end_hub should be a positive integer")
+        for hub in dict_content['hub']:
+            if isinstance(dict_content['metadata'][hub[0]], dict) and dict_content['metadata'][hub[0]].get("max_drones", None):
                 try:
-                    self.metadata[hub[0]]["max_drones"] = int(self.metadata[hub[0]]["max_drones"])
-                    if self.metadata[hub[0]]["max_drones"] <= 0:
+                    dict_content['metadata'][hub[0]]["max_drones"] = int(dict_content['metadata'][hub[0]]["max_drones"])
+                    if dict_content['metadata'][hub[0]]["max_drones"] <= 0:
                         raise ValueError
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[hub[0]]}): max_drones for hub should be a positive integer higher than at least 0")
-        for connection in self.connection:
-            if isinstance(self.metadata[connection[0] + "-" + connection[1]], dict) and self.metadata[connection[0] + "-" + connection[1]].get("max_link_capacity", None):
+                    raise ValueError(f"Error (line {dict_content['lines'][hub[0]]}): max_drones for hub should be a positive integer higher than at least 0")
+        for connection in dict_content['connection']:
+            if isinstance(dict_content['metadata'][connection[0] + "-" + connection[1]], dict) and dict_content['metadata'][connection[0] + "-" + connection[1]].get("max_link_capacity", None):
                 try:
-                    self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"] = int(self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"])
-                    if self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"] <= 0:
+                    dict_content['metadata'][connection[0] + "-" + connection[1]]["max_link_capacity"] = int(dict_content['metadata'][connection[0] + "-" + connection[1]]["max_link_capacity"])
+                    if dict_content['metadata'][connection[0] + "-" + connection[1]]["max_link_capacity"] <= 0:
                         raise ValueError
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[connection[0] + "-" + connection[1]]}): max_link_capacity for connection should be a positive integer higher than at least 0")
-        return self
+                    raise ValueError(f"Error (line {dict_content['lines'][connection[0] + "-" + connection[1]]}): max_link_capacity for connection should be a positive integer higher than at least 0")
 
-    @model_validator(mode="after")
-    def _check_coordinates_duplicate(self) -> "MapConfig":
-        if self.start_hub[1] == self.end_hub[1] and self.start_hub[2] == self.end_hub[2]:
-            raise ValueError(f"Error (line {self.lines[self.end_hub[0]]}): '{self.end_hub[0]}' is set at the same coordinates as '{self.start_hub[0]}'")
-        for hub_to_check in self.hub:
-            if hub_to_check[1] == self.start_hub[1] and hub_to_check[2] == self.start_hub[2]:
-                raise ValueError(f"Error (line {self.lines[hub_to_check[0]]}): '{hub_to_check[0]}' is set at the same coordinates as '{self.start_hub[0]}'")
-            elif hub_to_check[1] == self.end_hub[1] and hub_to_check[2] == self.end_hub[2]:
-                raise ValueError(f"Error (line {self.lines[hub_to_check[0]]}): '{hub_to_check[0]}' is set at the same coordinates as '{self.end_hub[0]}'")
-            for hub in self.hub:
+    def _check_coordinates_duplicate(dict_content) -> "MapConfig":
+        if dict_content['start_hub'][1] == dict_content['end_hub'][1] and dict_content['start_hub'][2] == dict_content['end_hub'][2]:
+            raise ValueError(f"Error (line {dict_content.lines[dict_content['end_hub'][0]]}): '{dict_content['end_hub'][0]}' is set at the same coordinates as '{dict_content['start_hub'][0]}'")
+        for hub_to_check in dict_content['hub']:
+            if hub_to_check[1] == dict_content['start_hub'][1] and hub_to_check[2] == dict_content['start_hub'][2]:
+                raise ValueError(f"Error (line {dict_content.lines[hub_to_check[0]]}): '{hub_to_check[0]}' is set at the same coordinates as '{dict_content['start_hub'][0]}'")
+            elif hub_to_check[1] == dict_content['end_hub'][1] and hub_to_check[2] == dict_content['end_hub'][2]:
+                raise ValueError(f"Error (line {dict_content.lines[hub_to_check[0]]}): '{hub_to_check[0]}' is set at the same coordinates as '{dict_content['end_hub'][0]}'")
+            for hub in dict_content['hub']:
                 if hub_to_check[1] == hub[1] and hub_to_check[2] == hub[2] and hub[0] != hub_to_check[0]:
-                    raise ValueError(f"Error (line {self.lines[hub[0]]}): '{hub[0]}' is set at the same coordinates as '{hub_to_check[0]}'")
-        return self
+                    raise ValueError(f"Error (line {dict_content.lines[hub[0]]}): '{hub[0]}' is set at the same coordinates as '{hub_to_check[0]}'")
+        return dict_content
 
 
 if __name__ == "__main__":
