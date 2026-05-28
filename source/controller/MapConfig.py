@@ -294,13 +294,12 @@ class MapConfig(BaseModel):
             for hub in self.hub:
                 if hub_to_check[1] == hub[1] and hub_to_check[2] == hub[2] and hub[0] != hub_to_check[0]:
                     raise ValueError(f"Error (line {self.lines[hub[0]]}): '{hub[0]}' is set at the same coordinates as '{hub_to_check[0]}'")
-        print(self.hub)
         return self
 
 
 if __name__ == "__main__":
     try:
-        parsed = MapConfig.parse("maps/challenger/01_the_impossible_dream.txt")
+        parsed = MapConfig.parse("maps/hard/01_maze_nightmare.txt")
     except Exception as e:
         print(e)
     else:
