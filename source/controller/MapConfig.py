@@ -1,16 +1,15 @@
+from tkinter import S
 from typing import Any
 import sys
 try:
     from pydantic import (
         BaseModel,
-        ConfigDict,
         Field,
         model_validator,
-        field_validator,
     )
 except ImportError:
     print("\033c", end="")
-    print("Errror: Pydantic not found.")
+    print("Error: Pydantic not found.")
     sys.exit(1)
 
 COLORS = [
@@ -46,7 +45,11 @@ class MapConfig(BaseModel):
     @classmethod
     def parse(cls, map_name: str) -> "MapConfig":
         content, lines = cls._read_file(map_name)
-        return cls(**(cls._convert_content_to_dict(content, lines)))
+        raw_data = cls._convert_content_to_dict(content, lines)
+        cls._all_types_covered(raw_data)
+        cls._check_hub_names(raw_data)
+        cls._check_connections_duplicate(raw_data)
+        return cls(**raw_data)
 
     @staticmethod
     def _read_file(map_name: str) -> list[str]:
@@ -61,8 +64,8 @@ class MapConfig(BaseModel):
                     lines.append(i + 1)
         return content, lines
 
-    @classmethod
-    def _check_mandatory_data(cls, line: str, line_number: int) -> list[str]:
+    @staticmethod
+    def _check_mandatory_data(line: str, line_number: int) -> list[str]:
         list_data = line[1][:(line[1].find("[") if line[1].find("[") != -1 else len(line[1]))]
         list_data = [value for value in list_data.split(" ") if value != ""]
         if "hub" in line[0] and len(list_data) != 3:
@@ -77,8 +80,8 @@ class MapConfig(BaseModel):
             raise ValueError(f"Error (line {line_number}): {line[0]} must have 1 value (<non_zero_integer>)")
         return list_data
 
-    @classmethod
-    def _check_metadata(cls, line: list[str], line_number: int) -> dict[str, str] | None:
+    @staticmethod
+    def _check_metadata(line: list[str], line_number: int) -> dict[str, str] | None:
         VALID_METADATA = {
             "hub": {
                 "color": COLORS,
@@ -110,23 +113,58 @@ class MapConfig(BaseModel):
                              "syntax is [metadata1=value1 metadata2=value2] at the end of the line")
         raw_metadata = line[1][brackets[0] + 1:brackets[1]]
         raw_metadata = [value for value in raw_metadata.split(" ") if value != ""]
+        if raw_metadata == []:
+            raise ValueError(f"Error (line {line_number}): metadata "
+                             "syntax is [metadata1=value1 metadata2=value2] at the end of the line")
         list_metadata = []
         for metadata in raw_metadata:
-            if len(metadata.split("=")) % 2 != 0 or metadata.split("=") == -1:
+            splitted_metadata = metadata.split("=")
+            if len(splitted_metadata) != 2:
                 raise ValueError(f"Error (line {line_number}): metadata "
                                 "syntax is [metadata1=value1 metadata2=value2] at the end of the line")
             else:
-                list_metadata.append(metadata.split("="))
+                list_metadata.append(splitted_metadata)
         dict_metadata = {}
         for metadata in list_metadata:
-            if line[0] not in VALID_METADATA.keys() or VALID_METADATA[line[0]][metadata[0]] is not None and metadata[1] not in VALID_METADATA[line[0]][metadata[0]]:
-                raise ValueError(f"Error (line {line_number}): this metadata type is not possible ({metadata[0]}={metadata[1]})")
-            
+            if line[0] not in VALID_METADATA.keys() or metadata[0] not in VALID_METADATA[line[0]].keys() or VALID_METADATA[line[0]][metadata[0]] is not None and metadata[1] not in VALID_METADATA[line[0]][metadata[0]]:
+                if metadata[0] == "color" and len(metadata[1].split(" ")) == 1:
+                    metadata[1] = "default"
+                else:
+                    raise ValueError(f"Error (line {line_number}): this metadata type is not possible ({metadata[0]}={metadata[1]})")
             dict_metadata[metadata[0]] = metadata[1]
         return dict_metadata
 
-    @classmethod
-    def _convert_content_to_dict(cls, content: list[str], lines) -> dict[str, Any]:
+    @staticmethod
+    def _check_hub_names(dict_content) -> None:
+        names = []
+        if '-' in dict_content["start_hub"][0]:
+            raise ValueError(f"Error (line {dict_content['lines'][dict_content["start_hub"][0]]}): name '{dict_content["start_hub"][0]}' should not have the '-' character in them")
+        names.append(dict_content["start_hub"][0])
+        if dict_content["end_hub"][0] in names:
+            raise ValueError(f"Error (line {dict_content['lines'][dict_content["end_hub"][0]]}): name '{dict_content["end_hub"][0]}' already exists")
+        elif '-' in dict_content["end_hub"][0]:
+            raise ValueError(f"Error (line {dict_content['lines'][dict_content["end_hub"][0]]}): name '{dict_content["end_hub"][0]}' should not have the '-' character in them")
+        names.append(dict_content["end_hub"][0])
+        for name, _, _ in dict_content['hub']:
+            if name in names:
+                raise ValueError(f"Error (line {dict_content['lines'][name]}): name '{name}' already exists")
+            elif '-' in name:
+                raise ValueError(f"Error (line {dict_content['lines'][name]}): name '{name}' should not have the '-' character in them")
+            names.append(name)
+        for connection in dict_content["connection"]:
+            if connection[0] not in names or connection[1] not in names:
+                not_present = connection[0] if connection[0] not in names else connection[1] if connection[1] not in names else ""
+                raise ValueError(f"Error (line {dict_content['lines'][connection[0] + '-' + connection[1]]}): '{not_present}' does not exists")
+
+    @staticmethod
+    def _check_connections_duplicate(dict_content) -> None:
+        for i, connection_to_check in enumerate(dict_content['connection']):
+            for y, connection in enumerate(dict_content['connection']):
+                if i != y and set(connection) == set(connection_to_check):
+                    raise ValueError(f"Error (line {dict_content["lines"][connection[0] + '-' + connection[1]]}): '{connection[0] + '-' + connection[1]}' this connection already exists")
+
+    @staticmethod
+    def _all_types_covered(dict_content) -> None:
         values_to_pass: dict[str, bool] = {
             "nb_drones": False,
             "start_hub": False,
@@ -134,6 +172,34 @@ class MapConfig(BaseModel):
             "end_hub": False,
             "connection": False,
         }
+        possible_values: dict[str, bool] = [
+            "nb_drones",
+            "start_hub",
+            "hub",
+            "end_hub",
+            "connection",
+        ]
+        for key in possible_values:
+            if dict_content.get(key, None):
+                values_to_pass[key] = True
+        not_passed: list[bool] = [key for key in values_to_pass.keys()
+                                  if values_to_pass[key] is False]
+        if not_passed != []:
+            raise ValueError(f"Error: these value_type are missing "
+                             f"{not_passed} in map file.")
+        else:
+            dict_content["start_hub"] = dict_content["start_hub"].pop()
+            dict_content["end_hub"] = dict_content["end_hub"].pop()
+
+    @classmethod
+    def _convert_content_to_dict(cls, content: list[str], lines) -> dict[str, Any]:
+        possible_values: list[str] = [
+            "nb_drones",
+            "start_hub",
+            "hub",
+            "end_hub",
+            "connection",
+        ]
         dict_content = {
             "nb_drones": None,
             "start_hub": [],
@@ -155,10 +221,10 @@ class MapConfig(BaseModel):
             else:
                 line = line.split(":")
                 line[0].strip(" ")
-                if len(line) != 2 or line[0] not in values_to_pass.keys():
+                if len(line) != 2 or line[0] not in possible_values:
                     raise ValueError(f"Error: (line {i}): value_type can "
                                      "ONLY be one of these parameters "
-                                     f"{[values_to_pass.keys()]} "
+                                     f"{[possible_values]} "
                                      "and syntax has to be like this: "
                                      "<value_type>:<value> (depends on"
                                      " value_type) [metadata] "
@@ -180,16 +246,8 @@ class MapConfig(BaseModel):
                             dict_content["metadata"][line_content[0] + "-" + line_content[1]] = metadata
                             dict_content["lines"][line_content[0] + "-" + line_content[1]] = i
                         dict_content[type].append(line_content)
-                    values_to_pass[line[0]] = True
                     if len(dict_content["start_hub"]) > 1 or len(dict_content["end_hub"]) > 1:
                         raise ValueError(f"Error (line {i}): Only 1 start_hub and end_hub")
-        not_passed: list[bool] = [key for key in values_to_pass.keys()
-                                  if values_to_pass[key] is False]
-        if not_passed != []:
-            raise ValueError(f"Error: these value_type are missing "
-                             f"{not_passed} in map file.")
-        dict_content["start_hub"] = dict_content["start_hub"].pop()
-        dict_content["end_hub"] = dict_content["end_hub"].pop()
         return dict_content
 
     @model_validator(mode="after")
@@ -198,18 +256,14 @@ class MapConfig(BaseModel):
             if isinstance(self.metadata[self.start_hub[0]], dict) and self.metadata[self.start_hub[0]].get("max_drones", None):
                 try:
                     self.metadata[self.start_hub[0]]["max_drones"] = int(self.metadata[self.start_hub[0]]["max_drones"])
-                    if self.metadata[self.start_hub[0]]["max_drones"] < self.nb_drones:
-                        raise ValueError
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[self.start_hub[0]]}): max_drones for start_hub should be a positive integer higher or equal to nb_drones")
+                    raise ValueError(f"Error (line {self.lines[self.start_hub[0]]}): max_drones for start_hub should be a positive integer")
         if self.metadata[self.end_hub[0]]:
             if isinstance(self.metadata[self.end_hub[0]], dict) and self.metadata[self.end_hub[0]].get("max_drones", None):
                 try:
                     self.metadata[self.end_hub[0]]["max_drones"] = int(self.metadata[self.end_hub[0]]["max_drones"])
-                    if self.metadata[self.end_hub[0]]["max_drones"] < self.nb_drones:
-                        raise ValueError
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[self.end_hub[0]]}): max_drones for end_hub should be a positive integer higher or equal to nb_drones")
+                    raise ValueError(f"Error (line {self.lines[self.end_hub[0]]}): max_drones for end_hub should be a positive integer")
         for hub in self.hub:
             if isinstance(self.metadata[hub[0]], dict) and self.metadata[hub[0]].get("max_drones", None):
                 try:
@@ -217,7 +271,7 @@ class MapConfig(BaseModel):
                     if self.metadata[hub[0]]["max_drones"] <= 0:
                         raise ValueError
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[hub[0]]}): max_drones for hub should be a positive integer higher or equal to nb_drones")
+                    raise ValueError(f"Error (line {self.lines[hub[0]]}): max_drones for hub should be a positive integer higher than at least 0")
         for connection in self.connection:
             if isinstance(self.metadata[connection[0] + "-" + connection[1]], dict) and self.metadata[connection[0] + "-" + connection[1]].get("max_link_capacity", None):
                 try:
@@ -225,13 +279,28 @@ class MapConfig(BaseModel):
                     if self.metadata[connection[0] + "-" + connection[1]]["max_link_capacity"] <= 0:
                         raise ValueError
                 except ValueError:
-                    raise ValueError(f"Error (line {self.lines[connection[0] + "-" + connection[1]]}): max_link_capacity for connection should be a positive integer higher or equal to nb_drones")
+                    raise ValueError(f"Error (line {self.lines[connection[0] + "-" + connection[1]]}): max_link_capacity for connection should be a positive integer higher than at least 0")
+        return self
+
+    @model_validator(mode="after")
+    def _check_coordinates_duplicate(self) -> "MapConfig":
+        if self.start_hub[1] == self.end_hub[1] and self.start_hub[2] == self.end_hub[2]:
+            raise ValueError(f"Error (line {self.lines[self.end_hub[0]]}): '{self.end_hub[0]}' is set at the same coordinates as '{self.start_hub[0]}'")
+        for hub_to_check in self.hub:
+            if hub_to_check[1] == self.start_hub[1] and hub_to_check[2] == self.start_hub[2]:
+                raise ValueError(f"Error (line {self.lines[hub_to_check[0]]}): '{hub_to_check[0]}' is set at the same coordinates as '{self.start_hub[0]}'")
+            elif hub_to_check[1] == self.end_hub[1] and hub_to_check[2] == self.end_hub[2]:
+                raise ValueError(f"Error (line {self.lines[hub_to_check[0]]}): '{hub_to_check[0]}' is set at the same coordinates as '{self.end_hub[0]}'")
+            for hub in self.hub:
+                if hub_to_check[1] == hub[1] and hub_to_check[2] == hub[2] and hub[0] != hub_to_check[0]:
+                    raise ValueError(f"Error (line {self.lines[hub[0]]}): '{hub[0]}' is set at the same coordinates as '{hub_to_check[0]}'")
+        print(self.hub)
         return self
 
 
 if __name__ == "__main__":
     try:
-        parsed = MapConfig.parse("maps/hard/03_ultimate_challenge.txt")
+        parsed = MapConfig.parse("maps/challenger/01_the_impossible_dream.txt")
     except Exception as e:
         print(e)
     else:
