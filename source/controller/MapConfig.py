@@ -1,26 +1,60 @@
 from typing import Any
-COLORS = [
-    "red",
-    "blue",
-    "yellow",
-    "green",
-    "orange",
-    "purple",
-    "cyan",
-    "maroon",
-    "brown",
-    "lime",
-    "magenta",
-    "gold",
-    "black",
-    "darkred",
-    "violet",
-    "crimson",
-    "rainbow"
-]
 
 
 class MapConfig:
+
+    COLORS = [
+        "red",
+        "blue",
+        "yellow",
+        "green",
+        "orange",
+        "purple",
+        "cyan",
+        "maroon",
+        "brown",
+        "lime",
+        "magenta",
+        "gold",
+        "black",
+        "darkred",
+        "violet",
+        "crimson",
+        "rainbow"
+    ]
+
+    POSSIBLE_VALUES: list[str] = [
+            "nb_drones",
+            "start_hub",
+            "hub",
+            "end_hub",
+            "connection",
+    ]
+
+    VALID_METADATA = {
+        "hub": {
+            "color": COLORS,
+            "max_drones": None,
+            "zone": [
+                "restricted",
+                "priority",
+                "normal",
+                "blocked"
+            ]
+        },
+        "start_hub": {
+            "color": COLORS,
+            "max_drones": None
+        },
+        "end_hub": {
+            "color": COLORS,
+            "max_drones": None
+        },
+        "connection": {
+            "max_link_capacity": None
+        }
+    }
+
     def __init__(self, nb_drones, start_hub, end_hub, hub, connection, metadata):
         self.nb_drones = nb_drones
         self.start_hub = start_hub
@@ -72,31 +106,8 @@ class MapConfig:
             raise ValueError(f"Error (line {line_number}): {line[0]} must have 1 value (<non_zero_integer>)")
         return list_data
 
-    @staticmethod
-    def _check_metadata(line: list[str], line_number: int) -> dict[str, str] | None:
-        VALID_METADATA = {
-            "hub": {
-                "color": COLORS,
-                "max_drones": None,
-                "zone": [
-                    "restricted",
-                    "priority",
-                    "normal",
-                    "blocked"
-                ]
-            },
-            "start_hub": {
-                "color": COLORS,
-                "max_drones": None
-            },
-            "end_hub": {
-                "color": COLORS,
-                "max_drones": None
-            },
-            "connection": {
-                "max_link_capacity": None
-            }
-        }
+    @classmethod
+    def _check_metadata(cls, line: list[str], line_number: int) -> dict[str, str] | None:
         brackets = (line[1].find("["), line[1].find("]"))
         if brackets[0] == -1 and brackets[1] == -1:
             return None
@@ -118,7 +129,7 @@ class MapConfig:
                 list_metadata.append(splitted_metadata)
         dict_metadata = {}
         for metadata in list_metadata:
-            if line[0] not in VALID_METADATA.keys() or metadata[0] not in VALID_METADATA[line[0]].keys() or VALID_METADATA[line[0]][metadata[0]] is not None and metadata[1] not in VALID_METADATA[line[0]][metadata[0]]:
+            if line[0] not in cls.VALID_METADATA.keys() or metadata[0] not in cls.VALID_METADATA[line[0]].keys() or cls.VALID_METADATA[line[0]][metadata[0]] is not None and metadata[1] not in cls.VALID_METADATA[line[0]][metadata[0]]:
                 if metadata[0] == "color" and len(metadata[1].split(" ")) == 1:
                     metadata[1] = "default"
                 else:
@@ -155,8 +166,8 @@ class MapConfig:
                 if i != y and set(connection) == set(connection_to_check):
                     raise ValueError(f"Error (line {dict_content["lines"][connection[0] + '-' + connection[1]]}): '{connection[0] + '-' + connection[1]}' this connection already exists")
 
-    @staticmethod
-    def _all_data_types_covered(dict_content) -> None:
+    @classmethod
+    def _all_data_types_covered(cls, dict_content) -> None:
         values_to_pass: dict[str, bool] = {
             "nb_drones": False,
             "start_hub": False,
@@ -164,14 +175,7 @@ class MapConfig:
             "end_hub": False,
             "connection": False,
         }
-        possible_values: dict[str, bool] = [
-            "nb_drones",
-            "start_hub",
-            "hub",
-            "end_hub",
-            "connection",
-        ]
-        for key in possible_values:
+        for key in cls.POSSIBLE_VALUES:
             if dict_content.get(key, None):
                 values_to_pass[key] = True
         not_passed: list[bool] = [key for key in values_to_pass.keys()
@@ -220,13 +224,6 @@ class MapConfig:
 
     @classmethod
     def _convert_content_to_dict(cls, content: list[str], lines) -> dict[str, Any]:
-        possible_values: list[str] = [
-            "nb_drones",
-            "start_hub",
-            "hub",
-            "end_hub",
-            "connection",
-        ]
         dict_content = {
             "nb_drones": None,
             "start_hub": [],
@@ -248,10 +245,10 @@ class MapConfig:
             else:
                 line = line.split(":")
                 line[0].strip(" ")
-                if len(line) != 2 or line[0] not in possible_values:
+                if len(line) != 2 or line[0] not in cls.POSSIBLE_VALUES:
                     raise ValueError(f"Error: (line {i}): value_type can "
                                      "ONLY be one of these parameters "
-                                     f"{[possible_values]} "
+                                     f"{[cls.POSSIBLE_VALUES]} "
                                      "and syntax has to be like this: "
                                      "<value_type>:<value> (depends on"
                                      " value_type) [metadata] "
