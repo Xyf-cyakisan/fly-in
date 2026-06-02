@@ -18,6 +18,7 @@ description = "A simulation of drones going from a start point to an end point t
 [tool.poetry.dependencies]
 python = ">=3.10"
 pydantic = ">=2.0"
+pygame = ">=2.6.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
