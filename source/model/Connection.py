@@ -20,8 +20,7 @@ class Connection:
 
     def _destination_accessible(self, drone_zone):
         if (self.max_link_capacity is not None and
-           len(self.drones) == self.max_link_capacity or
-           drone_zone not in self.zones):
+           len(self.drones) == self.max_link_capacity):
             return False
         try:
             zone = self._get_destination(drone_zone)
