@@ -20,27 +20,23 @@ class Graph:
                 self.hubs[connection[0]].setup_connection(self.connections[-1])
                 self.hubs[connection[1]].setup_connection(self.connections[-1])
             else:
-                if connection[0] in self.start_hub.name :
-                    self.connections.append(Connection((self.start_hub, self.hubs[connection[1]]), map_config.metadata[connection[0] + '-' + connection[1]]))
-                    self.start_hub.setup_connection(self.connections[-1])
-                    self.hubs[connection[1]].setup_connection(self.connections[-1])
-                elif connection[0] in self.end_hub.name:
-                    self.connections.append(Connection((self.end_hub, self.hubs[connection[1]]), map_config.metadata[connection[0] + '-' + connection[1]]))
-                    self.end_hub.setup_connection(self.connections[-1])
-                    self.hubs[connection[1]].setup_connection(self.connections[-1])
-                elif connection[1] in self.start_hub.name:
-                    self.connections.append(Connection((self.hubs[connection[0]], self.start_hub), map_config.metadata[connection[0] + '-' + connection[1]]))
-                    self.start_hub.setup_connection(self.connections[-1])
-                    self.hubs[connection[0]].setup_connection(self.connections[-1])
-                else:
-                    self.connections.append(Connection((self.hubs[connection[0]], self.end_hub), map_config.metadata[connection[0] + '-' + connection[1]]))
-                    self.end_hub.setup_connection(self.connections[-1])
-                    self.hubs[connection[0]].setup_connection(self.connections[-1])
+                if connection[0] == self.start_hub.name:
+                    hubs = (self.start_hub, self.hubs[connection[1]])
+                elif connection[0] == self.end_hub.name:
+                    hubs = (self.end_hub, self.hubs[connection[1]])
+                elif connection[1] == self.start_hub.name:
+                    hubs = (self.start_hub, self.hubs[connection[0]])
+                elif connection[1] == self.end_hub.name:
+                    hubs = (self.end_hub, self.hubs[connection[0]])
+                self.connections.append(Connection(hubs, map_config.metadata[connection[0] + '-' + connection[1]]))
+                hubs[0].setup_connection(self.connections[-1])
+                hubs[1].setup_connection(self.connections[-1])
         self.drones = []
         for id in range(map_config.nb_drones):
             drone = Drone(id + 1, self.start_hub)
             self.drones.append(drone)
-            self.start_hub.drones.append(drone)
+            self.start_hub.drones[id + 1] = drone
+        self.turns = 1
 
     def _set_pathfinder(self):
         self.pathfinder = Pathfinder(self.start_hub, self.end_hub, self.hubs, self.connections)
@@ -50,8 +46,19 @@ class Graph:
             drone.set_path(self.pathfinder.find_shortest_path(drone.place))
 
     def run_simulation(self):
+        tracks = {}
         self._set_pathfinder()
         self.pathfinder.check_if_possible_map()
         self._set_drones_path()
+        print(f"Turn {self.turns}:")
         for drone in self.drones:
-            print(drone.place.name)
+            drone.path = [self.hubs["waypoint1"]]
+            try:
+                og_place = drone.place.name
+                drone.move()
+            except MovementError:
+                continue
+            else:
+                print(f"drone_{drone.id}: " + og_place + "-" + drone.place.name)
+        for connection in self.connections:
+            connection.reset()

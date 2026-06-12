@@ -6,6 +6,7 @@ from colorama import Fore, Style
 
 def main() -> None:
     try:
+        print("\033c", end="")
         controller = Controller(os.getenv("MAP"))
         controller.run()
     except ValueError as value_error:

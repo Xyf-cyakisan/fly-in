@@ -4,17 +4,17 @@ from .Hub import Hub
 
 
 class Connection:
-    def __init__(self, zones: tuple[Hub, Hub], max_link_capacity=None):
-        self.zones = list(zones)
+    def __init__(self, hubs: tuple[Hub, Hub], max_link_capacity):
+        self.hubs = list(hubs)
         self.max_link_capacity = max_link_capacity
         self.drones = []
         self.passed_through = 0
 
     def _get_destination(self, drone_zone):
-        if drone_zone == self.zones[0].name:
-            return self.zones[1]
-        elif drone_zone == self.zones[1].name:
-            return self.zones[0]
+        if drone_zone.name == self.hubs[0].name:
+            return self.hubs[1]
+        elif drone_zone.name == self.hubs[1].name:
+            return self.hubs[0]
         else:
             raise ValueError("Error: drone_zone is not any of the two linked "
                              "connections.")
