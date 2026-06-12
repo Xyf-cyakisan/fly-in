@@ -18,3 +18,6 @@ clean:
 fclean: clean
 	rm -rf .venv
 	rm -rf poetry.lock
+
+run: install
+	. .venv/bin/activate ; python3 fly-in.py

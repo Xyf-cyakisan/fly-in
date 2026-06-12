@@ -8,6 +8,7 @@ class Connection:
         self.zones = list(zones)
         self.max_link_capacity = max_link_capacity
         self.drones = []
+        self.passed_through = 0
 
     def _get_destination(self, drone_zone):
         if drone_zone == self.zones[0].name:
@@ -20,7 +21,7 @@ class Connection:
 
     def _destination_accessible(self, drone_zone):
         if (self.max_link_capacity is not None and
-           len(self.drones) == self.max_link_capacity):
+           self.self.passed_through == self.max_link_capacity):
             return False
         try:
             zone = self._get_destination(drone_zone)
@@ -38,5 +39,8 @@ class Connection:
         if not self._destination_accessible(drone.place):
             raise MovementError("Error: this connection is not accessible")
         else:
+            self.passed_through += 1
             self._get_destination(drone.place).drone_arrival(drone)
 
+    def reset(self):
+        self.passed_through = len(self.drones)

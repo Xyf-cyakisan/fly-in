@@ -5,7 +5,7 @@ class Hub:
     def __init__(self, primary_data, metadata):
         self.drones = []
         self.name = primary_data[0]
-        self.coordinates + (primary_data[1], primary_data[2])
+        self.coordinates = (primary_data[1], primary_data[2])
         if metadata is not None:
             for key, value in metadata.items():
                 setattr(self, key, value)
@@ -22,7 +22,7 @@ class Hub:
         else:
             if self.max_drones == len(self.drones):
                 raise MovementError(f"Error: zone ({self.name}) cannot take "
-                                 "another drone")
+                                    "another drone")
             else:
                 self.drones.append(drone)
 

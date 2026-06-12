@@ -68,16 +68,29 @@ class MapConfig:
 
     @staticmethod
     def _read_file(map_name: str) -> list[str]:
+        if not isinstance(map_name, str):
+            raise FileNotFoundError("Error: Map not found, "
+                                    "please run the program like "
+                                    "so: 'make run MAP='<map_file_path>''")
         content: list[str] = []
         lines = []
-        with open(map_name, "r") as map:
-            for i, line in enumerate(map):
-                if line.startswith("#") or line == "\n":
-                    continue
-                else:
-                    content.append(line.strip("\n"))
-                    lines.append(i + 1)
-        return content, lines
+        try:
+            with open(map_name, "r") as map:
+                for i, line in enumerate(map):
+                    if line.startswith("#") or line == "\n":
+                        continue
+                    else:
+                        content.append(line.strip("\n"))
+                        lines.append(i + 1)
+        except FileNotFoundError:
+            raise FileNotFoundError("Error: Map not found, "
+                                    "please run the program like "
+                                    "so: 'make run MAP='<map_file_path>''")
+        except PermissionError:
+            raise PermissionError(f"Error: map: '{map_name}' cannot be "
+                                  "read because of permissions.")
+        else:
+            return content, lines
 
     @staticmethod
     def _check_mandatory_data(line: str, line_number: int) -> list[str]:
