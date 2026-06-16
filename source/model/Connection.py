@@ -1,31 +1,41 @@
 from ..utils.MovementError import MovementError
-
 from .Hub import Hub
+from .Drone import Drone
 
 
 class Connection:
     def __init__(self, hubs: tuple[Hub, Hub], max_link_capacity):
         self.hubs = list(hubs)
-        self.max_link_capacity = max_link_capacity
-        self.drones = []
+        self.max_link_capacity = max_link_capacity["max_link_capacity"] if isinstance(max_link_capacity, dict) else None
+        self.drones = {}
         self.passed_through = 0
 
     def _get_destination(self, drone_zone):
         if drone_zone.name == self.hubs[0].name:
-            return self.hubs[1]
+            try:
+                self.hubs[1].restricted
+            except AttributeError:
+                return self.hubs[1]
+            else:
+                return self
         elif drone_zone.name == self.hubs[1].name:
-            return self.hubs[0]
+            try:
+                self.hubs[0].restricted
+            except AttributeError:
+                return self.hubs[0]
+            else:
+                return self
         else:
             raise ValueError("Error: drone_zone is not any of the two linked "
                              "connections.")
 
-    def _destination_accessible(self, drone_zone):
+    def _destination_accessible(self, drone):
         if (self.max_link_capacity is not None and
-           self.self.passed_through == self.max_link_capacity):
+           self.passed_through == self.max_link_capacity):
             return False
         try:
-            zone = self._get_destination(drone_zone)
-            max_drones = zone.max_drones
+            zone = self._get_destination(drone.zone)
+            max_drones = zone.max_drones if isinstance(zone, Hub) else zone.max_link_capacity
             nb_drones = len(zone.drones)
         except AttributeError:
             return True
@@ -36,7 +46,7 @@ class Connection:
                 return True
 
     def drone_passing_through(self, drone):
-        if not self._destination_accessible(drone.place):
+        if self._destination_accessible(drone) is False:
             raise MovementError("Error: this connection is not accessible")
         else:
             self.passed_through += 1
@@ -44,3 +54,10 @@ class Connection:
 
     def reset(self):
         self.passed_through = len(self.drones)
+
+    def drone_arrival(self, drone: Drone) -> None:
+        self.drones[drone.id] = drone
+
+    def drone_departure(self, drone_id: int) -> None:
+        self._get_destination(self.drones[drone_id]).drone_arrival()
+        self.drones.pop(drone_id)

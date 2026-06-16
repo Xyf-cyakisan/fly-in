@@ -20,7 +20,9 @@ class Graph:
                 self.hubs[connection[0]].setup_connection(self.connections[-1])
                 self.hubs[connection[1]].setup_connection(self.connections[-1])
             else:
-                if connection[0] == self.start_hub.name:
+                if connection[0] == self.start_hub.name and connection[1] == self.end_hub.name or connection[0] == self.end_hub.name and connection[1] == self.start_hub.name:
+                    hubs = (self.start_hub, self.end_hub)
+                elif connection[0] == self.start_hub.name:
                     hubs = (self.start_hub, self.hubs[connection[1]])
                 elif connection[0] == self.end_hub.name:
                     hubs = (self.end_hub, self.hubs[connection[1]])
@@ -46,19 +48,28 @@ class Graph:
             drone.set_path(self.pathfinder.find_shortest_path(drone.place))
 
     def run_simulation(self):
-        tracks = {}
+        tracks = {drone.id: [self.start_hub.name] for drone in self.drones}
         self._set_pathfinder()
         self.pathfinder.check_if_possible_map()
         self._set_drones_path()
-        print(f"Turn {self.turns}:")
         for drone in self.drones:
-            drone.path = [self.hubs["waypoint1"]]
-            try:
-                og_place = drone.place.name
-                drone.move()
-            except MovementError:
-                continue
-            else:
-                print(f"drone_{drone.id}: " + og_place + "-" + drone.place.name)
-        for connection in self.connections:
-            connection.reset()
+            drone.set_path([self.hubs["waypoint1"], self.hubs["waypoint2"], self.end_hub])
+        while len(self.end_hub.drones) < len(self.drones):
+            for drone in self.drones:
+                if drone.place == self.end_hub:
+                    tracks[drone.id].append("FINISHED")
+                    continue
+                else:
+                    try:
+                        tracks[drone.id].append(drone.move())
+                    except MovementError:
+                        tracks[drone.id].append("WAIT")
+                        continue
+            for connection in self.connections:
+                connection.reset()
+            self.turns += 1
+        for i in range(self.turns):
+            print(f"Turn {i}:")
+            for drone in self.drones:
+                print(f"drone_{drone.id}: " + tracks[drone.id][i])
+        return tracks, self.turns

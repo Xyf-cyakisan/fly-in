@@ -1,3 +1,4 @@
+from ..model import Drone
 from ..utils.MovementError import MovementError
 
 
@@ -14,7 +15,7 @@ class Hub:
     def setup_connection(self, connection):
         self.connections.append(connection)
 
-    def drone_arrival(self, drone):
+    def drone_arrival(self, drone: Drone) -> None:
         try:
             self.max_drones
         except AttributeError:
@@ -25,6 +26,7 @@ class Hub:
                                     "another drone")
             else:
                 self.drones[drone.id] = drone
+        drone.path.pop(0)
         drone.place = self
 
     def _get_connection(self, drone):
@@ -33,7 +35,7 @@ class Hub:
                 return i
         return False
 
-    def drone_departure(self, drone_id):
+    def drone_departure(self, drone_id: int) -> None:
         drone = self.drones[drone_id]
         connection = self._get_connection(drone)
         if connection is not False:
