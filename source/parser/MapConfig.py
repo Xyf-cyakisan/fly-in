@@ -37,8 +37,10 @@ class MapConfig:
             "max_drones": None,
             "zone": ["restricted", "priority", "normal", "blocked"],
         },
-        "start_hub": {"color": COLORS, "max_drones": None},
-        "end_hub": {"color": COLORS, "max_drones": None},
+        "start_hub": {"color": COLORS, "max_drones": None,
+                      "zone": ["normal", "priority", "restricted"]},
+        "end_hub": {"color": COLORS, "max_drones": None,
+                    "zone": ["normal", "priority", "restricted"]},
         "connection": {"max_link_capacity": None},
     }
 
@@ -63,6 +65,7 @@ class MapConfig:
         cls._check_connections_duplicate(raw_data)
         cls._check_metadata_type(raw_data)
         cls._check_coordinates_duplicate(raw_data)
+        cls._check_if_possible_map(raw_data)
         raw_data.pop("lines")
         return cls(**raw_data)
 
@@ -522,10 +525,51 @@ class MapConfig:
                     )
         return dict_content
 
+    def _get_connection_for_hub(dict_content, hub_name, linked):
+        connected = []
+        for connection in dict_content["connection"]:
+            if hub_name in connection:
+                if hub_name == connection[0] and connection[1] not in linked:
+                    other = connection[1]
+                    if (dict_content["metadata"][hub_name] is None
+                        or dict_content["metadata"][hub_name].get("zone")
+                        != "blocked" and dict_content["metadata"][other]
+                        is None or dict_content["metadata"][other].get("zone")
+                            != "blocked"):
+                        connected.append(other)
+                elif hub_name == connection[1] and connection[0] not in linked:
+                    other = connection[0]
+                    if (dict_content["metadata"][hub_name] is None
+                        or dict_content["metadata"][hub_name].get("zone")
+                        != "blocked" and dict_content["metadata"][other]
+                        is None or dict_content["metadata"][other].get("zone")
+                            != "blocked"):
+                        connected.append(other)
+            else:
+                continue
+        return connected
+
+    @classmethod
+    def _check_if_possible_map(cls, dict_content) -> None:
+        queue = [dict_content["start_hub"][0]]
+        linked = set(dict_content["start_hub"][0])
+        while queue:
+            connected = MapConfig._get_connection_for_hub(dict_content,
+                                                          queue[0], linked)
+            queue.pop(0)
+            for hub in connected:
+                linked.add(hub)
+                queue.append(hub)
+            if dict_content["end_hub"][0] in linked:
+                break
+        if dict_content["end_hub"][0] not in linked:
+            raise ValueError("Error: This map is impossible, please change "
+                             "the configuration")
+
 
 if __name__ == "__main__":
     try:
-        parsed = MapConfig.parse("maps/hard/01_maze_nightmare.txt")
+        parsed = MapConfig.parse("maps/challenger/01_the_impossible_dream.txt")
     except Exception as e:
         print(e)
     else:

@@ -7,6 +7,3 @@ class Pathfinder:
 
     def find_shortest_path(self, position):
         pass
-
-    def check_if_possible_map(self):
-        pass

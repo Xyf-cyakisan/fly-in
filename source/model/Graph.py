@@ -50,7 +50,6 @@ class Graph:
     def run_simulation(self):
         tracks = {drone.id: [self.start_hub.name] for drone in self.drones}
         self._set_pathfinder()
-        self.pathfinder.check_if_possible_map()
         self._set_drones_path()
         for drone in self.drones:
             drone.set_path([self.hubs["waypoint1"], self.hubs["waypoint2"], self.end_hub])
