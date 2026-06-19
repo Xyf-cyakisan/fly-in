@@ -393,47 +393,45 @@ class MapConfig:
         return dict_content
 
     def _check_metadata_type(dict_content) -> None:
-        if dict_content["metadata"][dict_content["start_hub"][0]]:
-            if isinstance(
-                dict_content["metadata"][dict_content["start_hub"][0]], dict
-            ) and dict_content["metadata"][dict_content["start_hub"][0]].get(
-                "max_drones", None
-            ):
-                try:
+        if isinstance(
+            dict_content["metadata"][dict_content["start_hub"][0]], dict
+        ) and dict_content["metadata"][dict_content["start_hub"][0]].get(
+            "max_drones", None
+        ):
+            try:
+                dict_content["metadata"][dict_content["start_hub"][0]][
+                    "max_drones"
+                ] = int(
                     dict_content["metadata"][dict_content["start_hub"][0]][
                         "max_drones"
-                    ] = int(
-                        dict_content["metadata"][dict_content["start_hub"][0]][
-                            "max_drones"
-                        ]
-                    )
-                except ValueError:
-                    raise ValueError(
-                        "Error (line " +
-                        dict_content['lines'][dict_content['start_hub'][0]] +
-                        "): max_drones for start_hub should be a positive "
-                        "integer"
-                    )
-        if dict_content["metadata"][dict_content["end_hub"][0]]:
-            if isinstance(
-                dict_content["metadata"][dict_content["end_hub"][0]], dict
-            ) and dict_content["metadata"][dict_content["end_hub"][0]].get(
-                "max_drones", None
-            ):
-                try:
+                    ]
+                )
+            except ValueError:
+                raise ValueError(
+                    "Error (line " +
+                    dict_content['lines'][dict_content['start_hub'][0]] +
+                    "): max_drones for start_hub should be a positive "
+                    "integer"
+                )
+        if isinstance(
+            dict_content["metadata"][dict_content["end_hub"][0]], dict
+        ) and dict_content["metadata"][dict_content["end_hub"][0]].get(
+            "max_drones", None
+        ):
+            try:
+                dict_content["metadata"][dict_content["end_hub"][0]][
+                    "max_drones"
+                ] = int(
                     dict_content["metadata"][dict_content["end_hub"][0]][
                         "max_drones"
-                    ] = int(
-                        dict_content["metadata"][dict_content["end_hub"][0]][
-                            "max_drones"
-                        ]
-                    )
-                except ValueError:
-                    raise ValueError(
-                        "Error (line "
-                        f"{dict_content['lines'][dict_content['end_hub'][0]]})"
-                        ": max_drones for end_hub should be a positive integer"
-                    )
+                    ]
+                )
+            except ValueError:
+                raise ValueError(
+                    "Error (line "
+                    f"{dict_content['lines'][dict_content['end_hub'][0]]})"
+                    ": max_drones for end_hub should be a positive integer"
+                )
         for hub in dict_content["hub"]:
             if isinstance(
                 dict_content["metadata"][hub[0]], dict
@@ -450,6 +448,12 @@ class MapConfig:
                         "max_drones for hub should be a positive integer "
                         "higher than at least 0"
                     )
+            else:
+                if isinstance(dict_content["metadata"][hub[0]], dict):
+                    dict_content["metadata"][hub[0]]["max_drones"] = 1
+                else:
+                    dict_content["metadata"][hub[0]]["max_drones"] = {
+                        "max_drones": 1}
         for connection in dict_content["connection"]:
             if isinstance(
                 dict_content["metadata"][connection[0] + "-" + connection[1]],
