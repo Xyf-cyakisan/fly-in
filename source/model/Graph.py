@@ -38,14 +38,14 @@ class Graph:
             drone = Drone(id + 1, self.start_hub)
             self.drones.append(drone)
             self.start_hub.drones[id + 1] = drone
-        self.turns = 1
+        self.turns = 0
 
     def _set_pathfinder(self):
         self.pathfinder = Pathfinder(self.start_hub, self.end_hub, self.hubs, self.connections)
 
     def _set_drones_path(self):
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_path(drone.place))
+            drone.set_path(self.pathfinder.find_shortest_paths(drone.place))
 
     def run_simulation(self):
         tracks = {drone.id: [self.start_hub.name] for drone in self.drones}
@@ -62,12 +62,18 @@ class Graph:
                     try:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
-                        tracks[drone.id].append("WAIT")
-                        continue
+                        drone.set_path(self.pathfinder.find_shortest_paths(drone.place))
+                        while True:
+                            try:
+                                tracks[drone.id].append(drone.move())
+                            except MovementError:
+                                drone.switch_path()
+                            else:
+                                break
             for connection in self.connections:
                 connection.reset()
             self.turns += 1
-        for i in range(self.turns):
+        for i in range(self.turns + 1):
             print(f"Turn {i}:")
             for drone in self.drones:
                 print(f"drone_{drone.id}: " + tracks[drone.id][i])

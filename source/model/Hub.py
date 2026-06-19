@@ -26,12 +26,12 @@ class Hub:
                                     "another drone")
             else:
                 self.drones[drone.id] = drone
-        drone.path.pop(0)
+        drone.path[0].pop(0)
         drone.place = self
 
     def _get_connection(self, drone):
         for i, connection in enumerate(self.connections):
-            if drone.path[0] in connection.hubs:
+            if drone.path[0][0] in connection.hubs:
                 return i
         return False
 

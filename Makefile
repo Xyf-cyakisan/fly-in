@@ -21,3 +21,9 @@ fclean: clean
 
 run: install
 	. .venv/bin/activate ; python3 fly-in.py
+
+lint: install
+	. .venv/bin/activate; python3 -m flake8 && printf '\033[1;32mFlake8 all good !\033[0m\n'; python3 -m mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+
+lint-strict: install
+	. .venv/bin/activate; python3 -m flake8 && printf '\033[1;32mFlake8 all good !\033[0m\n'; python3 -m mypy . --strict

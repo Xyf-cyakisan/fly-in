@@ -13,18 +13,24 @@ class Connection:
     def _get_destination(self, drone_zone):
         if drone_zone.name == self.hubs[0].name:
             try:
-                self.hubs[1].restricted
+                self.hubs[1].zone
             except AttributeError:
                 return self.hubs[1]
             else:
-                return self
+                if self.hubs[1].zone == "restricted":
+                    return self
+                else:
+                    return self.hubs[1]
         elif drone_zone.name == self.hubs[1].name:
             try:
-                self.hubs[0].restricted
+                self.hubs[0].zone
             except AttributeError:
                 return self.hubs[0]
             else:
-                return self
+                if self.hubs[0].zone == "restricted":
+                    return self
+                else:
+                    return self.hubs[0]
         else:
             raise ValueError("Error: drone_zone is not any of the two linked "
                              "connections.")
