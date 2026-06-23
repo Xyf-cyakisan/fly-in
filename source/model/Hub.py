@@ -42,4 +42,5 @@ class Hub:
             self.connections[connection].drone_passing_through(drone)
             self.drones.pop(drone_id)
         else:
-            raise ValueError(f"Error: drone {drone.id} cannot go to {drone.path[0].name} from {self.name}")
+            raise ValueError(f"Error: drone {drone.id} cannot go to "
+                             f"{drone.path[0].name} from {self.name}")

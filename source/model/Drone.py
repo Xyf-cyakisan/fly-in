@@ -16,7 +16,7 @@ class Drone:
         og_place = self.place.name
         if self.path == []:
             self.set_path(self.old_paths)
-            return "WAITING"
+            return f"WAITING ({self.place})"
         try:
             self.path[0].restricted
         except AttributeError:
