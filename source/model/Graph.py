@@ -1,4 +1,4 @@
-from ..utils import MovementError
+from ..utils.MovementError import MovementError
 from .Hub import Hub
 from .Connection import Connection
 from .Drone import Drone
@@ -45,14 +45,12 @@ class Graph:
 
     def _set_drones_path(self):
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_paths(drone.place))
+            drone.set_path(self.pathfinder.find_shortest_path(drone.place, []))
 
     def run_simulation(self):
         tracks = {drone.id: [self.start_hub.name] for drone in self.drones}
         self._set_pathfinder()
         self._set_drones_path()
-        for drone in self.drones:
-            drone.set_path([self.hubs["waypoint1"], self.hubs["waypoint2"], self.end_hub])
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
                 if drone.place == self.end_hub:
@@ -62,12 +60,14 @@ class Graph:
                     try:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
-                        drone.set_path(self.pathfinder.find_shortest_paths(drone.place))
+                        to_avoid = {drone.path[0]}
+                        drone.set_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))
                         while True:
                             try:
                                 tracks[drone.id].append(drone.move())
                             except MovementError:
-                                drone.switch_path()
+                                to_avoid.add(drone.path[0])
+                                drone.set_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))    
                             else:
                                 break
             for connection in self.connections:

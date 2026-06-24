@@ -1,6 +1,5 @@
 from ..utils.MovementError import MovementError
 from .Hub import Hub
-from .Drone import Drone
 
 
 class Connection:
@@ -61,8 +60,9 @@ class Connection:
     def reset(self):
         self.passed_through = len(self.drones)
 
-    def drone_arrival(self, drone: Drone) -> None:
+    def drone_arrival(self, drone) -> None:
         self.drones[drone.id] = drone
+        drone.place = self
 
     def drone_departure(self, drone_id: int) -> None:
         self._get_destination(self.drones[drone_id]).drone_arrival()

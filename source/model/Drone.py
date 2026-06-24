@@ -1,4 +1,4 @@
-from ..model.Connection import Connection
+from .Connection import Connection
 from .Place import Place
 
 
@@ -7,26 +7,26 @@ class Drone:
         self.id = d_id
         self.place: Place = start_hub
         self.old_paths = []
+        self.path = None
 
     def set_path(self, path):
-        self.old_paths = path
-        self.path = path
+        if self.path is None or path is not None and len(self.path) + 1 >= len(path):
+            self.path = path
+        if path is None:
+            self.path = ["WAITING"] + self.path
 
     def move(self) -> str:
         og_place = self.place.name
-        if self.path == []:
-            self.set_path(self.old_paths)
-            return f"WAITING ({self.place})"
+        if self.path[0] == "WAITING":
+            self.path.pop(0)
+            return f"WAITING ({self.place.name})"
         try:
             self.path[0].restricted
         except AttributeError:
             move = og_place + '-' + self.path[0].name
         else:
-            move = "Waiting in connection(" + og_place + '-' + self.path[0].name + ")"
+            move = "Waiting in connection(" + self.path[0] + '-' + self.path[0].name + ")"
             if isinstance(self.place, Connection):
                 move = og_place + '-' + self.path[0].name
         self.place.drone_departure(self.id)
         return move
-
-    def switch_path(self):
-        self.path.pop(0)

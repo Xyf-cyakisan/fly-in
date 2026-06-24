@@ -84,7 +84,7 @@ class MapConfig:
                         continue
                     else:
                         content.append(line.strip("\n"))
-                        lines.append(i + 1)
+                        lines.append(str(i + 1))
         except FileNotFoundError:
             raise FileNotFoundError("Error: Map not found, "
                                     "please run the program like "

@@ -1,7 +1,6 @@
 # Hard Level 3: THE ULTIMATE CHALLENGE - All tricks combined
-f
+
 nb_drones: 15
-start_hub: start 0 0 [color=green max_drones=15]
 start_hub: start 0 0 [color=green max_drones=15]
 # Layer 1: Initial distribution nightmare
 hub: dist_gate1 1 -1 [color=orange]
@@ -49,7 +48,6 @@ end_hub: goal 13 0 [color=gold max_drones=15]
 # Layer 1 connections
 connection: start-dist_gate1
 connection: start-dist_gate2 [max_link_capacity=2]
-connection: start-dist_gate3
 connection: start-dist_gate3
 
 # Layer 2 connections - maze with traps
