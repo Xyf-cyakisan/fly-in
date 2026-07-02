@@ -2,7 +2,7 @@ class Pathfinder:
     VALUES = {
         "restricted": 2,
         "normal": 1,
-        "priority": 1,
+        "priority": float("-inf"),
         "blocked": float("inf")
     }
 
@@ -17,7 +17,6 @@ class Pathfinder:
         path = []
         neighbors = {og_position: self._get_connected(og_position, path)}
         current = (0, og_position)
-        distance = 0
         if neighbors[og_position] == []:
             return None
         while neighbors[og_position] != [] or current[1] != og_position:
@@ -37,9 +36,7 @@ class Pathfinder:
                 else:
                     current = neighbors[current[1]].pop()
                 path.append(current[1])
-                distance += current[0]
             else:
-                distance -= current[0]
                 if path != []:
                     path.pop()
                 current = (self.values[path[-1].name], path[-1]) if path != [] else (0, og_position)

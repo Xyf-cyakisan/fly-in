@@ -37,6 +37,6 @@ class Drone:
                 return self.place.name + "-" + self.path[0].name
             else:
                 if self.path[0].zone == "restricted":
-                    return "Waiting in connection(" + self.place.name + '-' + self.path[0].name + ")"
+                    return "Waiting in connection (" + self.place.name + '-' + self.path[0].name + ")"
                 else:
                     return self.place.name + "-" + self.path[0].name

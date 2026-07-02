@@ -51,6 +51,7 @@ class Graph:
         tracks = {drone.id: [self.start_hub.name] for drone in self.drones}
         self._set_pathfinder()
         self._set_drones_path()
+        i = 0
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
                 if drone.place == self.end_hub:
@@ -61,13 +62,19 @@ class Graph:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
                         to_avoid = {drone.path[0]}
-                        drone.switch_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))
+                        path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
+                        drone.switch_path(path)
+                        if path is not None and len(drone.path) + 1 < len(path):
+                            to_avoid.add(path[0])
                         while True:
                             try:
                                 tracks[drone.id].append(drone.move())
                             except MovementError:
                                 to_avoid.add(drone.path[0])
-                                drone.switch_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))    
+                                path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
+                                drone.switch_path(path)
+                                if path is not None and len(drone.path) + 1 < len(path):
+                                    to_avoid.add(path[0])
                             else:
                                 break
             for connection in self.connections:
