@@ -31,15 +31,15 @@ class Connection:
                 else:
                     return self.hubs[0]
         else:
-            raise ValueError("Error: drone_zone is not any of the two linked "
-                             "connections.")
+            raise ValueError(f"Error: {drone_zone.name} is not any of the two linked "
+                             f"connections ({self.hubs[0].name, self.hubs[1].name}).")
 
     def _destination_accessible(self, drone):
         if (self.max_link_capacity is not None and
            self.passed_through == self.max_link_capacity):
             return False
         try:
-            zone = self._get_destination(drone.zone)
+            zone = self._get_destination(drone.place)
             max_drones = zone.max_drones if isinstance(zone, Hub) else zone.max_link_capacity
             nb_drones = len(zone.drones)
         except AttributeError:
@@ -65,5 +65,5 @@ class Connection:
         drone.place = self
 
     def drone_departure(self, drone_id: int) -> None:
-        self._get_destination(self.drones[drone_id]).drone_arrival()
+        self.drones[drone_id].path[0].drone_arrival(self.drones[drone_id])
         self.drones.pop(drone_id)

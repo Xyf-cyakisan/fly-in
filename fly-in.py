@@ -19,7 +19,8 @@ def main() -> None:
         print(f"{Fore.RED}{perm_error}{Style.RESET_ALL}")
         sys.exit(3)
     except KeyboardInterrupt:
-        print("Bye Bye")
+        print("\033c")
+        print(f"{Fore.BLUE}Bye Bye{Style.RESET_ALL}")
 
 
 if __name__ == "__main__":

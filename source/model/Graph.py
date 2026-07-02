@@ -61,13 +61,13 @@ class Graph:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
                         to_avoid = {drone.path[0]}
-                        drone.set_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))
+                        drone.switch_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))
                         while True:
                             try:
                                 tracks[drone.id].append(drone.move())
                             except MovementError:
                                 to_avoid.add(drone.path[0])
-                                drone.set_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))    
+                                drone.switch_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))    
                             else:
                                 break
             for connection in self.connections:
