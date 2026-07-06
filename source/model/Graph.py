@@ -45,43 +45,28 @@ class Graph:
 
     def _set_drones_path(self):
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_path(drone.place, []))
+            drone.set_path(self.pathfinder.find_shortest_path(drone.place))
 
     def run_simulation(self):
-        tracks = {drone.id: [self.start_hub.name] for drone in self.drones}
+        tracks = {drone.id: [] for drone in self.drones}
         self._set_pathfinder()
         self._set_drones_path()
-        i = 0
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
                 if drone.place == self.end_hub:
-                    tracks[drone.id].append("FINISHED")
+                    tracks[drone.id].append("")
                     continue
                 else:
                     try:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
-                        to_avoid = {drone.path[0]}
-                        path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
-                        drone.switch_path(path)
-                        if path is not None and len(drone.path) + 1 < len(path):
-                            to_avoid.add(path[0])
-                        while True:
-                            try:
-                                tracks[drone.id].append(drone.move())
-                            except MovementError:
-                                to_avoid.add(drone.path[0])
-                                path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
-                                drone.switch_path(path)
-                                if path is not None and len(drone.path) + 1 < len(path):
-                                    to_avoid.add(path[0])
-                            else:
-                                break
+                        tracks[drone.id].append("")
             for connection in self.connections:
                 connection.reset()
             self.turns += 1
-        for i in range(self.turns + 1):
-            print(f"Turn {i}:")
+        for i in range(self.turns):
+            print(f"Turn {i + 1}: ", end="")
             for drone in self.drones:
-                print(f"drone_{drone.id}: " + tracks[drone.id][i])
+                print(tracks[drone.id][i], end=" " if tracks[drone.id][i] != "" else "")
+            print()
         return tracks, self.turns

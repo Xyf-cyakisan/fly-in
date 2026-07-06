@@ -52,7 +52,7 @@ class Connection:
 
     def drone_passing_through(self, drone):
         if self._destination_accessible(drone) is False:
-            raise MovementError("Error: this connection is not accessible")
+            raise MovementError
         else:
             self.passed_through += 1
             self._get_destination(drone.place).drone_arrival(drone)
@@ -61,8 +61,12 @@ class Connection:
         self.passed_through = len(self.drones)
 
     def drone_arrival(self, drone) -> None:
-        self.drones[drone.id] = drone
-        drone.place = self
+        if (self.max_link_capacity is None or
+           self.passed_through < self.max_link_capacity):
+            self.drones[drone.id] = drone
+            drone.place = self
+        else:
+            raise MovementError
 
     def drone_departure(self, drone_id: int) -> None:
         self.drones[drone_id].path[0].drone_arrival(self.drones[drone_id])

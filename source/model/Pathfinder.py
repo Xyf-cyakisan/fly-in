@@ -12,40 +12,33 @@ class Pathfinder:
         self.hubs = hubs
         self.connections = connections
 
-    def find_shortest_path(self, og_position, to_avoid):
-        self._setup_graph_values(to_avoid)
-        path = []
-        neighbors = {og_position: self._get_connected(og_position, path)}
-        current = (0, og_position)
-        if neighbors[og_position] == []:
-            return None
-        while neighbors[og_position] != [] or current[1] != og_position:
-            try:
-                neighbors[current[1]]
-            except KeyError:
-                neighbors[current[1]] = self._get_connected(current[1], path)
-            if neighbors[current[1]] != []:
-                if self.end_hub in [neighbor[1] for neighbor in neighbors[current[1]]]:
-                    path.append(self.end_hub)
-                    break
-                if len({neighbor[0] for neighbor in neighbors[current[1]]}) > 1:
-                    only_cost = [neighbor[0] for neighbor in neighbors[current[1]]]
-                    previous = current
-                    current = neighbors[current[1]][only_cost.index(min(only_cost))]
-                    neighbors[previous[1]].pop(only_cost.index(min(only_cost)))
-                else:
-                    current = neighbors[current[1]].pop()
-                path.append(current[1])
+    def find_shortest_path(self, og_position):
+        self._setup_graph_values()
+        fastest_paths = {hub.name: [float("inf"), []] for hub in list(self.hubs.values()) + [self.end_hub, self.start_hub]}
+        queue = [(0, og_position)]
+        current_path = []
+        while queue:
+            current = queue.pop()
+            current_path.append(current[1])
+            if current[0] > fastest_paths[current[1].name][0]:
+                current_path.pop()
+                continue
             else:
-                if path != []:
-                    path.pop()
-                current = (self.values[path[-1].name], path[-1]) if path != [] else (0, og_position)
-        if self.end_hub not in path:
-            return None
-        return path
+                for neighbor in self._get_neighbors_of_hub(current[1]):
+                    distance = current[0] + self.values[neighbor.name]
+                    if distance < fastest_paths[neighbor.name][0]:
+                        queue.append((distance, neighbor))
+                        fastest_paths[neighbor.name] = (distance, current_path + [neighbor])
+        return fastest_paths[self.end_hub.name][1][1:]
 
-    def _setup_graph_values(self, to_avoid):
-        self.values = {}
+    def _get_neighbors_of_hub(self, hub):
+        neighbors = []
+        for connection in hub.connections:
+            neighbors.append(connection.hubs[0] if hub == connection.hubs[1] else connection.hubs[1])
+        return neighbors
+
+    def _setup_graph_values(self):
+        self.values = {self.start_hub.name: 1}
         try:
             self.end_hub.zone
         except AttributeError:
@@ -60,8 +53,6 @@ class Pathfinder:
             else:
                 self.values[hub_name] = (
                     self.VALUES[self.hubs[hub_name].zone])
-        for hub in to_avoid:
-            self.values.pop(hub.name)
 
     def _get_connected(self, current, path):
         connected = []

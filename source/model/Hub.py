@@ -21,8 +21,7 @@ class Hub:
             self.drones[drone.id] = drone
         else:
             if self.max_drones == len(self.drones):
-                raise MovementError(f"Error: zone ({self.name}) cannot take "
-                                    "another drone")
+                raise MovementError
             else:
                 self.drones[drone.id] = drone
         drone.path.pop(0)
