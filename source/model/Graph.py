@@ -45,12 +45,14 @@ class Graph:
 
     def _set_drones_path(self):
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_path(drone.place))
+            drone.set_path(self.pathfinder.find_shortest_path(drone.place, []))
 
     def run_simulation(self):
         tracks = {drone.id: [] for drone in self.drones}
         self._set_pathfinder()
         self._set_drones_path()
+        # for drone in self.drones:
+        #     print([hub.name for hub in drone.path])
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
                 if drone.place == self.end_hub:
@@ -60,7 +62,30 @@ class Graph:
                     try:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
-                        tracks[drone.id].append("")
+                        if drone.check_priority_in_path() is False:
+                            original_path = drone.path
+                            to_avoid = {drone.path[0]}
+                            if drone.previous_place is not None:
+                                to_avoid.add(drone.previous_place)
+                            drone.set_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))
+                            if drone.path == []:
+                                drone.set_path(original_path)
+                                tracks[drone.id].append("")
+                            else:
+                                while True:
+                                    try:
+                                        tracks[drone.id].append(drone.move())
+                                    except MovementError:
+                                        to_avoid.add(drone.path[0])
+                                        drone.set_path(self.pathfinder.find_shortest_path(drone.place, to_avoid))
+                                        if drone.path == []:
+                                            drone.set_path(original_path)
+                                            tracks[drone.id].append("")
+                                            break
+                                    else:
+                                        break
+                        else:
+                            tracks[drone.id].append("")
             for connection in self.connections:
                 connection.reset()
             self.turns += 1

@@ -486,6 +486,10 @@ class MapConfig:
                         "): max_link_capacity for connection should be a "
                         "positive integer higher than at least 0"
                     )
+            else:
+                dict_content["metadata"][
+                    connection[0] + "-" + connection[1]] = (
+                        {"max_link_capacity": 1})
 
     def _check_coordinates_duplicate(dict_content) -> "MapConfig":
         if (

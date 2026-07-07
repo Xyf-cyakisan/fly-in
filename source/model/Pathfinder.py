@@ -12,32 +12,34 @@ class Pathfinder:
         self.hubs = hubs
         self.connections = connections
 
-    def find_shortest_path(self, og_position):
-        self._setup_graph_values()
+    def find_shortest_path(self, og_position,  to_avoid):
+        self._setup_graph_values(to_avoid)
         fastest_paths = {hub.name: [float("inf"), []] for hub in list(self.hubs.values()) + [self.end_hub, self.start_hub]}
-        queue = [(0, og_position)]
+        queue = [(0, og_position, [])]
         current_path = []
         while queue:
             current = queue.pop()
-            current_path.append(current[1])
+            current_path = current[2]
             if current[0] > fastest_paths[current[1].name][0]:
-                current_path.pop()
                 continue
             else:
-                for neighbor in self._get_neighbors_of_hub(current[1]):
-                    distance = current[0] + self.values[neighbor.name]
+                neighbors = self._get_neighbors_of_hub(current[1], current_path)
+                for neighbor in neighbors:
+                    distance = 1 if current[0] == float("-inf") and self.values[neighbor.name] == float("inf") else current[0]  + 1 if self.values[neighbor.name] == float("-inf") and current[0] == float("inf") else self.values[neighbor.name]
                     if distance < fastest_paths[neighbor.name][0]:
-                        queue.append((distance, neighbor))
+                        queue.append((distance, neighbor, current_path + [neighbor]))
                         fastest_paths[neighbor.name] = (distance, current_path + [neighbor])
-        return fastest_paths[self.end_hub.name][1][1:]
+        return fastest_paths[self.end_hub.name][1]
 
-    def _get_neighbors_of_hub(self, hub):
+    def _get_neighbors_of_hub(self, hub, current_path):
         neighbors = []
         for connection in hub.connections:
-            neighbors.append(connection.hubs[0] if hub == connection.hubs[1] else connection.hubs[1])
+            neighbor = connection.hubs[0] if hub == connection.hubs[1] else connection.hubs[1]
+            if neighbor not in current_path:
+                neighbors.append(neighbor)
         return neighbors
 
-    def _setup_graph_values(self):
+    def _setup_graph_values(self, to_avoid):
         self.values = {self.start_hub.name: 1}
         try:
             self.end_hub.zone
@@ -53,6 +55,8 @@ class Pathfinder:
             else:
                 self.values[hub_name] = (
                     self.VALUES[self.hubs[hub_name].zone])
+        for hub in to_avoid:
+            self.values[hub.name] = self.VALUES["blocked"]
 
     def _get_connected(self, current, path):
         connected = []

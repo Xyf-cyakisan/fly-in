@@ -5,7 +5,7 @@ from .Hub import Hub
 class Connection:
     def __init__(self, hubs: tuple[Hub, Hub], max_link_capacity):
         self.hubs = list(hubs)
-        self.max_link_capacity = max_link_capacity["max_link_capacity"] if isinstance(max_link_capacity, dict) else None
+        self.max_link_capacity = max_link_capacity["max_link_capacity"]
         self.drones = {}
         self.passed_through = 0
 
@@ -35,8 +35,7 @@ class Connection:
                              f"connections ({self.hubs[0].name, self.hubs[1].name}).")
 
     def _destination_accessible(self, drone):
-        if (self.max_link_capacity is not None and
-           self.passed_through == self.max_link_capacity):
+        if self.passed_through == self.max_link_capacity:
             return False
         try:
             zone = self._get_destination(drone.place)
@@ -54,15 +53,14 @@ class Connection:
         if self._destination_accessible(drone) is False:
             raise MovementError
         else:
-            self.passed_through += 1
             self._get_destination(drone.place).drone_arrival(drone)
+            self.passed_through += 1
 
     def reset(self):
         self.passed_through = len(self.drones)
 
     def drone_arrival(self, drone) -> None:
-        if (self.max_link_capacity is None or
-           self.passed_through < self.max_link_capacity):
+        if self.passed_through < self.max_link_capacity:
             self.drones[drone.id] = drone
             drone.place = self
         else:

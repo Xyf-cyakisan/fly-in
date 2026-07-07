@@ -7,11 +7,13 @@ class Drone:
         self.id = d_id
         self.place: Place = start_hub
         self.path = None
+        self.previous_place = None
 
     def set_path(self, path):
         self.path = path
 
     def move(self) -> str:
+        self.previous_place = self.place if not isinstance(self.place, Connection) else self.previous_place
         movement = self._get_move()
         self.place.drone_departure(self.id)
         return movement
@@ -29,3 +31,14 @@ class Drone:
                     return f"D{self.id}-" + self.place.name + '-' + self.path[0].name
                 else:
                     return f"D{self.id}-" + self.path[0].name
+
+    def check_priority_in_path(self):
+        for hub in self.path:
+            try:
+                hub.zone
+            except AttributeError:
+                continue
+            else:
+                if hub.zone == "priority":
+                    return True
+        return False
