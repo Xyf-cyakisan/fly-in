@@ -2,7 +2,7 @@ class Pathfinder:
     VALUES = {
         "restricted": 2,
         "normal": 1,
-        "priority": float("-inf"),
+        "priority": 1,
         "blocked": float("inf")
     }
 
@@ -18,15 +18,17 @@ class Pathfinder:
         queue = [(0, og_position, [])]
         current_path = []
         while queue:
-            current = queue.pop()
+            cheapest = self._get_cheapest(queue)
+            current = queue[cheapest]
             current_path = current[2]
+            queue.pop(cheapest)
             if current[0] > fastest_paths[current[1].name][0]:
                 continue
             else:
                 neighbors = self._get_neighbors_of_hub(current[1], current_path)
                 for neighbor in neighbors:
-                    distance = 1 if current[0] == float("-inf") and self.values[neighbor.name] == float("inf") else current[0]  + 1 if self.values[neighbor.name] == float("-inf") and current[0] == float("inf") else self.values[neighbor.name]
-                    if distance < fastest_paths[neighbor.name][0]:
+                    distance = current[0] + self.values[neighbor.name]
+                    if distance < fastest_paths[neighbor.name][0] and (self.check_priority_in_path(fastest_paths[neighbor.name][1]) is False or self.check_priority_in_path(fastest_paths[neighbor.name][1]) == self.check_priority_in_path(current_path + [neighbor])):
                         queue.append((distance, neighbor, current_path + [neighbor]))
                         fastest_paths[neighbor.name] = (distance, current_path + [neighbor])
         return fastest_paths[self.end_hub.name][1]
@@ -38,6 +40,32 @@ class Pathfinder:
             if neighbor not in current_path:
                 neighbors.append(neighbor)
         return neighbors
+
+    def check_priority_in_path(self, hubs):
+        for hub in hubs:
+            try:
+                hub.zone
+            except AttributeError:
+                continue
+            else:
+                if hub.zone == "priority":
+                    return True
+        return False
+
+    def _get_cheapest(self, queue: list):
+        if self.check_priority_in_path([hub[1] for hub in queue]):
+            for _, hub, _ in queue:
+                try:
+                    hub.zone
+                except AttributeError:
+                    continue
+                else:
+                    if hub.zone == "priority":
+                        priorised = hub
+                        break
+            return [hub[1] for hub in queue].index(priorised)
+        else:
+            return [hub[0] for hub in queue].index(min([hub[0] for hub in queue]))
 
     def _setup_graph_values(self, to_avoid):
         self.values = {self.start_hub.name: 1}
