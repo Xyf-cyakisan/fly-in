@@ -413,6 +413,19 @@ class MapConfig:
                     "): max_drones for start_hub should be a positive "
                     "integer"
                 )
+            else:
+                dict_content["metadata"][dict_content["start_hub"][0]][
+                                    "max_drones"
+                                ] = dict_content["nb_drones"]
+        else:
+            if isinstance(dict_content["metadata"][
+                    dict_content["start_hub"][0]], dict):
+                dict_content["metadata"][dict_content["start_hub"][0]][
+                                                "max_drones"
+                                            ] = dict_content["nb_drones"]
+            else:
+                dict_content["metadata"][dict_content["start_hub"][0]] = (
+                    {"max_drones": dict_content["nb_drones"]})
         if isinstance(
             dict_content["metadata"][dict_content["end_hub"][0]], dict
         ) and dict_content["metadata"][dict_content["end_hub"][0]].get(
@@ -432,6 +445,19 @@ class MapConfig:
                     f"{dict_content['lines'][dict_content['end_hub'][0]]})"
                     ": max_drones for end_hub should be a positive integer"
                 )
+            else:
+                dict_content["metadata"][dict_content["end_hub"][0]][
+                                    "max_drones"
+                                ] = dict_content["nb_drones"]
+        else:
+            if isinstance(dict_content["metadata"][
+                    dict_content["end_hub"][0]], dict):
+                dict_content["metadata"][dict_content["end_hub"][0]][
+                                                "max_drones"
+                                            ] = dict_content["nb_drones"]
+            else:
+                dict_content["metadata"][dict_content["end_hub"][0]] = (
+                    {"max_drones": dict_content["nb_drones"]})
         for hub in dict_content["hub"]:
             if isinstance(
                 dict_content["metadata"][hub[0]], dict
