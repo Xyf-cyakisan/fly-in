@@ -28,7 +28,9 @@ class Pathfinder:
                 neighbors = self._get_neighbors_of_hub(current[1], current_path)
                 for neighbor in neighbors:
                     distance = current[0] + self.values[neighbor.name]
-                    if distance < fastest_paths[neighbor.name][0] and (self.check_priority_in_path(fastest_paths[neighbor.name][1]) is False or self.check_priority_in_path(fastest_paths[neighbor.name][1]) == self.check_priority_in_path(current_path + [neighbor])):
+                    priority_fastest_path = self.check_priority_in_path(fastest_paths[neighbor.name][1])
+                    priority_current_path = self.check_priority_in_path(current_path + [neighbor])
+                    if (distance < fastest_paths[neighbor.name][0]) or (priority_current_path is True and priority_fastest_path is False and distance == fastest_paths[neighbor.name][0]):
                         queue.append((distance, neighbor, current_path + [neighbor]))
                         fastest_paths[neighbor.name] = (distance, current_path + [neighbor])
         return fastest_paths[self.end_hub.name][1]
