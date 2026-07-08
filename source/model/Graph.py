@@ -51,8 +51,6 @@ class Graph:
         tracks = {drone.id: [] for drone in self.drones}
         self._set_pathfinder()
         self._set_drones_path()
-        # for drone in self.drones:
-        #     print([hub.name for hub in drone.path])
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
                 if drone.place == self.end_hub:
