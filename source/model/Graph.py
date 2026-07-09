@@ -66,11 +66,12 @@ class Graph:
                             if drone.previous_place is not None:
                                 to_avoid.add(drone.previous_place)
                             path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
-                            if len(path) <= len(original_path) + 1:
-                                drone.set_path(path)
-                            else:
-                                to_avoid.add(path[0])
-                            if drone.path == []:
+                            if path != []:
+                                if len(path) <= len(original_path) + 1:
+                                    drone.set_path(path)
+                                else:
+                                    to_avoid.add(path[0])
+                            if path == []:
                                 drone.set_path(original_path)
                                 tracks[drone.id].append("")
                             else:
@@ -80,7 +81,7 @@ class Graph:
                                     except MovementError:
                                         to_avoid.add(drone.path[0])
                                         path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
-                                        if drone.path == []:
+                                        if path == []:
                                             drone.set_path(original_path)
                                             tracks[drone.id].append("")
                                             break
