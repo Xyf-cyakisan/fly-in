@@ -16,6 +16,13 @@ class Hub:
 
     def drone_arrival(self, drone) -> None:
         try:
+            self.zone
+        except AttributeError:
+            ...
+        else:
+            if self.zone == "blocked":
+                raise MovementError
+        try:
             self.max_drones
         except AttributeError:
             self.drones[drone.id] = drone

@@ -13,9 +13,10 @@ class Drone:
         self.path = path
 
     def move(self) -> str:
-        self.previous_place = self.place if not isinstance(self.place, Connection) else self.previous_place
+        previous_place = self.place if not isinstance(self.place, Connection) else self.previous_place
         movement = self._get_move()
         self.place.drone_departure(self.id)
+        self.previous_place = previous_place
         return movement
 
     def _get_move(self):
