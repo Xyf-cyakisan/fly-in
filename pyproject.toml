@@ -19,9 +19,10 @@ description = "A simulation of drones going from a start point to an end point t
 python = ">=3.10"
 pydantic = ">=2.0"
 pygame = ">=2.6.1"
-colorama= ">=0.4.6"
-flake8= ">=7.3.0"
-mypy= ">=2.1.0"
+colorama = ">=0.4.6"
+flake8 = ">=7.3.0"
+mypy = ">=2.1.0"
+pytest = ">=9.0.3"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
