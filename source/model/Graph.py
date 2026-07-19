@@ -4,7 +4,7 @@ from .Connection import Connection
 from .Drone import Drone
 from ..parser.MapConfig import MapConfig
 from .Pathfinder import Pathfinder
-
+from ..utils.simulation_funcs import get_path_len
 
 class Graph:
     def __init__(self, map_config: MapConfig):
@@ -67,7 +67,7 @@ class Graph:
                                 to_avoid.add(drone.previous_place)
                             path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
                             if path != []:
-                                if len(path) <= len(original_path) + 1:
+                                if get_path_len(path) <= get_path_len(original_path) + 1:
                                     drone.set_path(path)
                                 else:
                                     to_avoid.add(path[0])
@@ -85,7 +85,7 @@ class Graph:
                                             drone.set_path(original_path)
                                             tracks[drone.id].append("")
                                             break
-                                        if len(path) <= len(original_path) + 1:
+                                        if get_path_len(path) <= get_path_len(original_path) + 1:
                                             drone.set_path(path)
                                         else:
                                             to_avoid.add(path[0])
