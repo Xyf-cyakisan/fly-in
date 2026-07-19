@@ -22,15 +22,10 @@ class Hub:
         else:
             if self.zone == "blocked":
                 raise MovementError
-        try:
-            self.max_drones
-        except AttributeError:
-            self.drones[drone.id] = drone
+        if self.max_drones == len(self.drones):
+            raise MovementError
         else:
-            if self.max_drones == len(self.drones):
-                raise MovementError
-            else:
-                self.drones[drone.id] = drone
+            self.drones[drone.id] = drone
         drone.path.pop(0)
         drone.place = self
 

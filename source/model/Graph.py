@@ -53,6 +53,7 @@ class Graph:
         self._set_drones_path()
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
+                # print(drone.id, drone.place.name if isinstance(drone.place, Hub) else [hub.name for hub in drone.place.hubs])
                 if drone.place == self.end_hub:
                     tracks[drone.id].append("")
                     continue
