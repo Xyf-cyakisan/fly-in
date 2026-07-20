@@ -1,6 +1,7 @@
 from ..model.Hub import Hub
 
-def get_path_len(path: list):
+
+def get_path_len(path: list[Hub]):
     counter = 0
     for hub in path:
         try:
@@ -18,5 +19,6 @@ def get_path_len(path: list):
 def check_restricted_connections(restricted_hub: Hub):
     counter = 0
     for connection in restricted_hub.connections:
-        counter += sum([1 for drone in connection.drones.values() if drone.previous_place != restricted_hub])
+        counter += sum([1 for drone in connection.drones.values()
+                        if drone.previous_place != restricted_hub])
     return counter
