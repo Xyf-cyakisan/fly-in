@@ -60,39 +60,36 @@ class Graph:
                     try:
                         tracks[drone.id].append(drone.move())
                     except MovementError:
-                        if drone.check_priority_in_path() is False:
-                            original_path = drone.path
-                            to_avoid = {drone.path[0]}
-                            if drone.previous_place is not None:
-                                to_avoid.add(drone.previous_place)
-                            path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
-                            if path != []:
-                                if get_path_len(path) <= get_path_len(original_path) + 1:
-                                    drone.set_path(path)
-                                else:
-                                    to_avoid.add(path[0])
-                            if path == []:
-                                drone.set_path(original_path)
-                                tracks[drone.id].append("")
+                        original_path = drone.path
+                        to_avoid = {drone.path[0]}
+                        if drone.previous_place is not None:
+                            to_avoid.add(drone.previous_place)
+                        path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
+                        if path != []:
+                            if get_path_len(path) <= get_path_len(original_path) + 1:
+                                drone.set_path(path)
                             else:
-                                while True:
-                                    try:
-                                        tracks[drone.id].append(drone.move())
-                                    except MovementError:
-                                        to_avoid.add(drone.path[0])
-                                        path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
-                                        if path == []:
-                                            drone.set_path(original_path)
-                                            tracks[drone.id].append("")
-                                            break
-                                        if get_path_len(path) <= get_path_len(original_path) + 1:
-                                            drone.set_path(path)
-                                        else:
-                                            to_avoid.add(path[0])
-                                    else:
-                                        break
-                        else:
+                                to_avoid.add(path[0])
+                        if path == []:
+                            drone.set_path(original_path)
                             tracks[drone.id].append("")
+                        else:
+                            while True:
+                                try:
+                                    tracks[drone.id].append(drone.move())
+                                except MovementError:
+                                    to_avoid.add(drone.path[0])
+                                    path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
+                                    if path == []:
+                                        drone.set_path(original_path)
+                                        tracks[drone.id].append("")
+                                        break
+                                    if get_path_len(path) <= get_path_len(original_path) + 1:
+                                        drone.set_path(path)
+                                    else:
+                                        to_avoid.add(path[0])
+                                else:
+                                    break
             for connection in self.connections:
                 connection.reset()
             self.turns += 1
