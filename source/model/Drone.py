@@ -32,14 +32,3 @@ class Drone:
                     return f"D{self.id}-" + self.place.name + '-' + self.path[0].name
                 else:
                     return f"D{self.id}-" + self.path[0].name
-
-    def check_priority_in_path(self):
-        for hub in self.path:
-            try:
-                hub.zone
-            except AttributeError:
-                continue
-            else:
-                if hub.zone == "priority":
-                    return True
-        return False
