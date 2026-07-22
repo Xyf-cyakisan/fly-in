@@ -22,9 +22,9 @@ class PygameView:
         screen = pygame.display.set_mode((2560, 1440))
         clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
-        screen.fill("black")
+        screen.blit(pygame.image.load("source/assets/Fly-In_Background_2.png"), (0, 0))
         pygame.display.flip()
-        pygame.draw.circle(screen, "blue", (100, 100), 80)
+        pygame.draw.circle(screen, "black", (1280, 720), 100)
         pygame.display.flip()
         running = True
         while running:
