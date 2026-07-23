@@ -1,5 +1,6 @@
 from ..model.Graph import Graph
 from ..parser.MapConfig import MapConfig
+from ..view.PygameView import PygameView
 
 
 class Controller:
@@ -12,7 +13,12 @@ class Controller:
     def __set_graph(self):
         self.__graph = Graph(self.__map_config)
 
+    def __set_view(self):
+        self.__view = PygameView(self.__graph)
+
     def run(self):
         self.__set_config()
         self.__set_graph()
+        self.__set_view()
         self.__graph.run_simulation()
+        self.__view.display_graph()
