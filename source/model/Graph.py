@@ -6,6 +6,7 @@ from ..parser.MapConfig import MapConfig
 from .Pathfinder import Pathfinder
 from ..utils.simulation_funcs import get_path_len
 
+
 class Graph:
     def __init__(self, map_config: MapConfig):
         self.start_hub = Hub(map_config.start_hub, map_config.metadata[map_config.start_hub[0]])
