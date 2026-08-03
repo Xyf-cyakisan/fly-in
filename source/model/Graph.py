@@ -41,6 +41,7 @@ class Graph:
             self.start_hub.drones[id + 1] = drone
         self.turns = 0
         self.tracks = {drone.id: [] for drone in self.drones}
+        self.capacity = []
 
     def _set_pathfinder(self):
         self.pathfinder = Pathfinder(self.start_hub, self.end_hub, self.hubs, self.connections)
@@ -55,11 +56,12 @@ class Graph:
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
                 if drone.place == self.end_hub:
-                    self.tracks[drone.id].append("")
+                    self.tracks[drone.id].append(("", ""))
                     continue
                 else:
                     try:
                         self.tracks[drone.id].append(drone.move())
+                        self.tracks[drone.id][-1] = (self.tracks[drone.id][-1], drone.place.name)
                     except MovementError:
                         original_path = drone.path
                         to_avoid = {drone.path[0]}
@@ -73,17 +75,18 @@ class Graph:
                                 to_avoid.add(path[0])
                         if path == []:
                             drone.set_path(original_path)
-                            self.tracks[drone.id].append("")
+                            self.tracks[drone.id].append(("", ""))
                         else:
                             while True:
                                 try:
                                     self.tracks[drone.id].append(drone.move())
+                                    self.tracks[drone.id][-1] = (self.tracks[drone.id][-1], drone.place.name)
                                 except MovementError:
                                     to_avoid.add(drone.path[0])
                                     path = self.pathfinder.find_shortest_path(drone.place, to_avoid)
                                     if path == []:
                                         drone.set_path(original_path)
-                                        self.tracks[drone.id].append("")
+                                        self.tracks[drone.id].append(("", ""))
                                         break
                                     if get_path_len(path) <= get_path_len(original_path) + 1:
                                         drone.set_path(path)
@@ -91,11 +94,12 @@ class Graph:
                                         to_avoid.add(path[0])
                                 else:
                                     break
+            self.capacity.append({place.name: len(place.drones) for place in list(self.hubs.values()) + self.connections})
             for connection in self.connections:
                 connection.reset()
             self.turns += 1
         for i in range(self.turns):
             print(f"Turn {i + 1}: ", end="")
             for drone in self.drones:
-                print(self.tracks[drone.id][i], end=" " if self.tracks[drone.id][i] != "" else "")
+                print(self.tracks[drone.id][i][0], end=" " if self.tracks[drone.id][i][0] != "" else "")
             print()

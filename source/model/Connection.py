@@ -2,8 +2,10 @@ from ..utils.MovementError import MovementError
 from .Hub import Hub
 from ..utils.simulation_funcs import check_restricted_connections
 
+
 class Connection:
     def __init__(self, hubs: tuple[Hub, Hub], max_link_capacity):
+        self.name = hubs[0].name + "-" + hubs[1].name
         self.hubs = list(hubs)
         self.max_link_capacity = max_link_capacity["max_link_capacity"]
         self.drones = {}
