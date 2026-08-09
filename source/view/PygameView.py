@@ -49,7 +49,6 @@ class PygameView:
     def _draw_connections(self):
         for connection in self._graph.connections:
             pygame.draw.line(self.screen, self.COLORS["grey"], self.coords[connection.hubs[0].name], self.coords[connection.hubs[1].name], 20)
-        pygame.display.flip()
 
     def _draw_hubs(self):
         for hub in self._graph.hubs.values():
@@ -58,7 +57,6 @@ class PygameView:
                           self.coords[self._graph.start_hub.name])
         self._draw_circle(self.COLORS[self._graph.end_hub.color],
                           self.coords[self._graph.end_hub.name])
-        pygame.display.flip()
 
     def _print_names(self):
         for hub in self._graph.hubs.values():
@@ -74,7 +72,6 @@ class PygameView:
         coords = self.coords[self._graph.end_hub.name]
         coords = (coords[0] - 35, coords[1] + 45)
         self.screen.blit(text, coords)
-        pygame.display.flip()
 
     def _set_distance_between_hubs(self):
         min_v = {}
@@ -128,7 +125,6 @@ class PygameView:
         self.clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
         self.screen.fill(self.COLORS["black"])
-        pygame.display.flip()
         self.font = pygame.font.Font(None, 25)
 
     def _get_screen_coords(self, x, y):
@@ -138,7 +134,6 @@ class PygameView:
         self.drones = [DroneSprite(drone.id, "blue", 25, 25) for drone in self._graph.drones]
         for drone in self.drones:
             drone.draw(self.coords[self._graph.start_hub.name], self.screen)
-        pygame.display.flip()
 
     def _print_places_capacity(self, current_turn):
         for place_name, place_capacity in self._graph.capacity[current_turn].items():
@@ -148,14 +143,15 @@ class PygameView:
     def _print_next_turn(self):
         if self.actual_turn != len(self._graph.tracks[1]):
             self.screen.fill(self.COLORS["black"])
-            pygame.display.flip()
+
             self._reset_map()
             self.current_turn += 1
             self.actual_turn += 1
             for i, drone in enumerate(self._graph.drones):
                 self.drones[i].draw(self.coords[self._graph.tracks[drone.id][self.current_turn][1]], self.screen)
             self._print_places_capacity(self.actual_turn)
-            pygame.display.flip()
+        self._print_turn_number()
+        pygame.display.flip()
 
     def _reset_map(self):
         self._draw_connections()
@@ -165,7 +161,6 @@ class PygameView:
     def _print_turn_number(self):
         text = self.font.render("Turn: " + str(self.actual_turn), True, "white", "black")
         self.screen.blit(text, (0, 0))
-        pygame.display.flip()
 
     def display_graph(self):
         self._initialize_pygame()
@@ -184,7 +179,6 @@ class PygameView:
                         running = False
                     elif event.key == pygame.K_SPACE:
                         self._print_next_turn()
-                        self._print_turn_number()
         pygame.quit()
 
 
