@@ -1,4 +1,5 @@
 import os
+from .models import DroneSprite
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 try:
     import pygame
@@ -7,7 +8,6 @@ except ImportError:
     print("Error: Pygame module not found, please use "
           "the 'make install' before running the program")
     sys.exit(1)
-from .models import DroneSprite
 
 
 class PygameView:
@@ -45,11 +45,11 @@ class PygameView:
             around = self.COLORS["default"]
         pygame.draw.circle(self.screen, around, coords, 35)
         pygame.draw.circle(self.screen, color, coords, 30)
-        pygame.display.flip()
 
     def _draw_connections(self):
         for connection in self._graph.connections:
             pygame.draw.line(self.screen, self.COLORS["grey"], self.coords[connection.hubs[0].name], self.coords[connection.hubs[1].name], 20)
+        pygame.display.flip()
 
     def _draw_hubs(self):
         for hub in self._graph.hubs.values():
@@ -86,21 +86,27 @@ class PygameView:
         covered_by_map_x = self.screen_x * 0.85
         covered_by_map_y = self.screen_y * 0.90
         distance_between = {
-            "x": (covered_by_map_x - 35) // abs(max_v["x"] - min_v["x"]),
-            "y": (covered_by_map_y - 35) // abs(max_v["y"] - min_v["y"])
+            "x": (covered_by_map_x - 35) // abs(max_v["x"] - min_v["x"]) if abs(max_v["x"] - min_v["x"]) != 0 else 0,
+            "y": (covered_by_map_y - 35) // abs(max_v["y"] - min_v["y"]) if abs(max_v["y"] - min_v["y"]) != 0 else 0
             }
         self.converted_coordinates = {
             "x": {},
             "y": {}
             }
         counter = 0
-        for coord in range(min_v["y"], max_v["y"] + 1):
-            self.converted_coordinates["y"][coord] = (distance_between["y"] * counter + self.screen_y * 0.05 if counter != 0 else self.screen_y * 0.05)
-            counter += 1
-        counter = 0
-        for coord in range(min_v["x"], max_v["x"] + 1):
-            self.converted_coordinates["x"][coord] = (distance_between["x"] * counter + self.screen_x * 0.075 if counter != 0 else self.screen_x * 0.075)
-            counter += 1
+        if distance_between["y"] == 0:
+            self.converted_coordinates["y"][min_v["y"]] = self.screen_y // 2
+        else:
+            for coord in range(min_v["y"], max_v["y"] + 1):
+                self.converted_coordinates["y"][coord] = (distance_between["y"] * counter + self.screen_y * 0.05 if counter != 0 else self.screen_y * 0.05)
+                counter += 1
+            counter = 0
+        if distance_between["x"] == 0:
+            self.converted_coordinates["x"][min_v["y"]] = self.screen_x // 2
+        else:
+            for coord in range(min_v["x"], max_v["x"] + 1):
+                self.converted_coordinates["x"][coord] = (distance_between["x"] * counter + self.screen_x * 0.075 if counter != 0 else self.screen_x * 0.075)
+                counter += 1
 
     def _initialize_coords_dict(self):
         self.coords = {}
@@ -109,7 +115,7 @@ class PygameView:
         for hub in self._graph.hubs.values():
             self.coords[hub.name] = self._get_screen_coords(*hub.coordinates)
         for connection in self._graph.connections:
-            self.coords[connection.name] = (self.coords[connection.hubs[0].name][0] + (self.coords[connection.hubs[0].name][0] - self.coords[connection.hubs[1].name][0]), self.coords[connection.hubs[0].name][1] + (self.coords[connection.hubs[0].name][1] - self.coords[connection.hubs[1].name][1]))
+            self.coords[connection.name] = ((self.coords[connection.hubs[0].name][0] + self.coords[connection.hubs[1].name][0]) / 2, (self.coords[connection.hubs[0].name][1] + self.coords[connection.hubs[1].name][1]) / 2)
 
     def _initialize_pygame(self):
         pygame.init()
@@ -121,7 +127,7 @@ class PygameView:
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
-        self.screen.blit(pygame.image.load(f"source/assets/Fly-In_Background_2_{self.screen_x}{self.screen_y}.png"), (0, 0))
+        self.screen.fill(self.COLORS["black"])
         pygame.display.flip()
         self.font = pygame.font.Font(None, 25)
 
@@ -134,23 +140,41 @@ class PygameView:
             drone.draw(self.coords[self._graph.start_hub.name], self.screen)
         pygame.display.flip()
 
+    def _print_places_capacity(self, current_turn):
+        for place_name, place_capacity in self._graph.capacity[current_turn].items():
+            text = self.font.render(place_capacity, True, "white", "black")
+            self.screen.blit(text, (self.coords[place_name][0] - 17.5, self.coords[place_name][1] - 60))
+
     def _print_next_turn(self):
-        self.current_turn += 1
-        self.actual_turn += 1
-        for i, drone in enumerate(self._graph.drones):
-            if self._graph.tracks[drone.id][self.current_turn][1] == "":
-                continue
-            else:
+        if self.actual_turn != len(self._graph.tracks[1]):
+            self.screen.fill(self.COLORS["black"])
+            pygame.display.flip()
+            self._reset_map()
+            self.current_turn += 1
+            self.actual_turn += 1
+            for i, drone in enumerate(self._graph.drones):
                 self.drones[i].draw(self.coords[self._graph.tracks[drone.id][self.current_turn][1]], self.screen)
+            self._print_places_capacity(self.actual_turn)
+            pygame.display.flip()
+
+    def _reset_map(self):
+        self._draw_connections()
+        self._draw_hubs()
+        self._print_names()
+
+    def _print_turn_number(self):
+        text = self.font.render("Turn: " + str(self.actual_turn), True, "white", "black")
+        self.screen.blit(text, (0, 0))
         pygame.display.flip()
 
     def display_graph(self):
         self._initialize_pygame()
         self._initialize_coords_dict()
-        self._draw_connections()
-        self._draw_hubs()
-        self._print_names()
+        self._reset_map()
         self._initialize_drones()
+        self._print_turn_number()
+        self._print_places_capacity(self.actual_turn)
+        pygame.display.flip()
         running = True
         while running:
             self.clock.tick(60)
@@ -160,6 +184,7 @@ class PygameView:
                         running = False
                     elif event.key == pygame.K_SPACE:
                         self._print_next_turn()
+                        self._print_turn_number()
         pygame.quit()
 
 
