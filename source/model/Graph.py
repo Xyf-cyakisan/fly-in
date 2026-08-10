@@ -18,24 +18,9 @@ class Graph:
                           self.end_hub.name: self.end_hub})
         self.connections = []
         for connection in map_config.connection:
-            if connection[0] not in (self.start_hub.name, self.end_hub.name) and connection[1] not in (self.start_hub.name, self.end_hub.name):
-                self.connections.append(Connection((self.hubs[connection[0]], self.hubs[connection[1]]), map_config.metadata[connection[0] + '-' + connection[1]]))
-                self.hubs[connection[0]].setup_connection(self.connections[-1])
-                self.hubs[connection[1]].setup_connection(self.connections[-1])
-            else:
-                if connection[0] == self.start_hub.name and connection[1] == self.end_hub.name or connection[0] == self.end_hub.name and connection[1] == self.start_hub.name:
-                    hubs = (self.start_hub, self.end_hub)
-                elif connection[0] == self.start_hub.name:
-                    hubs = (self.start_hub, self.hubs[connection[1]])
-                elif connection[0] == self.end_hub.name:
-                    hubs = (self.end_hub, self.hubs[connection[1]])
-                elif connection[1] == self.start_hub.name:
-                    hubs = (self.start_hub, self.hubs[connection[0]])
-                elif connection[1] == self.end_hub.name:
-                    hubs = (self.end_hub, self.hubs[connection[0]])
-                self.connections.append(Connection(hubs, map_config.metadata[connection[0] + '-' + connection[1]]))
-                hubs[0].setup_connection(self.connections[-1])
-                hubs[1].setup_connection(self.connections[-1])
+            self.connections.append(Connection((self.hubs[connection[0]], self.hubs[connection[1]]), map_config.metadata[connection[0] + '-' + connection[1]]))
+            self.hubs[connection[0]].setup_connection(self.connections[-1])
+            self.hubs[connection[1]].setup_connection(self.connections[-1])
         self.drones = []
         for id in range(map_config.nb_drones):
             drone = Drone(id + 1, self.start_hub)
