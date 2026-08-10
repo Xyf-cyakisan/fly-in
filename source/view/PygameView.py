@@ -107,7 +107,7 @@ class PygameView:
                                         pygame.display.Info().current_h)
         self._set_distance_between_hubs()
         pygame.display.set_icon(pygame.image.load("source/assets/fly-in_icone.png"))
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
         self.screen.fill(self.COLORS["black"])
@@ -136,8 +136,12 @@ class PygameView:
             for i, drone in enumerate(self._graph.drones):
                 self.drones[i].draw(self.coords[self._graph.tracks[drone.id][self.current_turn][1]], self.screen)
             self._print_places_capacity(self.actual_turn)
-        self._print_turn_number()
-        pygame.display.flip()
+            self._print_turn_number()
+            print(f"Turn {self.current_turn + 1}: ", end="")
+            for drone in self.drones:
+                print(self._graph.tracks[drone.id][self.current_turn][0], end=" " if self._graph.tracks[drone.id][self.current_turn][0] != "" else "")
+            print()
+            pygame.display.flip()
 
     def _reset_map(self):
         self._draw_connections()

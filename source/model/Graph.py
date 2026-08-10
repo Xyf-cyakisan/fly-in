@@ -85,8 +85,3 @@ class Graph:
             for connection in self.connections:
                 connection.reset()
             self.turns += 1
-        for i in range(self.turns):
-            print(f"Turn {i + 1}: ", end="")
-            for drone in self.drones:
-                print(self.tracks[drone.id][i][0], end=" " if self.tracks[drone.id][i][0] != "" else "")
-            print()
