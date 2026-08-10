@@ -48,7 +48,9 @@ class PygameView:
 
     def _draw_connections(self):
         for connection in self._graph.connections:
-            pygame.draw.line(self.screen, self.COLORS["grey"], self.coords[connection.hubs[0].name], self.coords[connection.hubs[1].name], 20)
+            pygame.draw.line(self.screen, self.COLORS["grey"], self.coords[
+                connection.hubs[0].name], self.coords[connection.hubs[1].name],
+                20)
 
     def _draw_hubs(self):
         for hub in self._graph.hubs.values():
@@ -63,68 +65,87 @@ class PygameView:
 
     def _set_distance_between_hubs(self):
         min_v = {}
-        min_v["x"] = min([hub.coordinates[0] for hub in self._graph.hubs.values()])
-        min_v["y"] = min([hub.coordinates[1] for hub in self._graph.hubs.values()])
+        min_v["x"] = min([hub.coordinates[0] for hub in
+                          self._graph.hubs.values()])
+        min_v["y"] = min([hub.coordinates[1] for hub in
+                          self._graph.hubs.values()])
         max_v = {}
-        max_v["x"] = max([hub.coordinates[0] for hub in self._graph.hubs.values()])
-        max_v["y"] = max([hub.coordinates[1] for hub in self._graph.hubs.values()])
+        max_v["x"] = max([hub.coordinates[0] for hub in
+                          self._graph.hubs.values()])
+        max_v["y"] = max([hub.coordinates[1] for hub in
+                          self._graph.hubs.values()])
         covered_by_map_x = self.screen_x * 0.85
         covered_by_map_y = self.screen_y * 0.90
         distance_between = {
-            "x": (covered_by_map_x - 35) // abs(max_v["x"] - min_v["x"]) if abs(max_v["x"] - min_v["x"]) != 0 else 0,
-            "y": (covered_by_map_y - 35) // abs(max_v["y"] - min_v["y"]) if abs(max_v["y"] - min_v["y"]) != 0 else 0
+            "x": (covered_by_map_x - 35) // abs(max_v["x"] - min_v["x"])
+            if abs(max_v["x"] - min_v["x"]) != 0 else 0,
+            "y": (covered_by_map_y - 35) // abs(max_v["y"] - min_v["y"])
+            if abs(max_v["y"] - min_v["y"]) != 0 else 0
             }
-        self.converted_coordinates = {
+        converted_coordinates = {
             "x": {},
             "y": {}
             }
         counter = 0
         if distance_between["y"] == 0:
-            self.converted_coordinates["y"][min_v["y"]] = self.screen_y // 2
+            converted_coordinates["y"][min_v["y"]] = self.screen_y // 2
         else:
             for coord in range(min_v["y"], max_v["y"] + 1):
-                self.converted_coordinates["y"][coord] = (distance_between["y"] * counter + self.screen_y * 0.05 if counter != 0 else self.screen_y * 0.05)
+                converted_coordinates["y"][coord] = (
+                    distance_between["y"] * counter + self.screen_y * 0.05
+                    if counter != 0 else self.screen_y * 0.05)
                 counter += 1
             counter = 0
         if distance_between["x"] == 0:
-            self.converted_coordinates["x"][min_v["y"]] = self.screen_x // 2
+            converted_coordinates["x"][min_v["y"]] = self.screen_x // 2
         else:
             for coord in range(min_v["x"], max_v["x"] + 1):
-                self.converted_coordinates["x"][coord] = (distance_between["x"] * counter + self.screen_x * 0.075 if counter != 0 else self.screen_x * 0.075)
+                converted_coordinates["x"][coord] = (
+                    distance_between["x"] * counter + self.screen_x *
+                    0.075 if counter != 0 else self.screen_x * 0.075)
                 counter += 1
+        return converted_coordinates
 
     def _initialize_coords_dict(self):
+        converted_coordinates = self._set_distance_between_hubs()
         self.coords = {}
         for hub in self._graph.hubs.values():
-            self.coords[hub.name] = self._get_screen_coords(*hub.coordinates)
+            self.coords[hub.name] = (converted_coordinates["x"][
+                hub.coordinates[0]], converted_coordinates[
+                "y"][hub.coordinates[1]])
         for connection in self._graph.connections:
-            self.coords[connection.name] = ((self.coords[connection.hubs[0].name][0] + self.coords[connection.hubs[1].name][0]) / 2, (self.coords[connection.hubs[0].name][1] + self.coords[connection.hubs[1].name][1]) / 2)
+            self.coords[connection.name] = ((self.coords[
+                connection.hubs[0].name][0] + self.coords[
+                    connection.hubs[1].name][0]) / 2, (self.coords[
+                        connection.hubs[0].name][1] + self.coords[
+                            connection.hubs[1].name][1]) / 2)
 
     def _initialize_pygame(self):
         pygame.init()
         pygame.font.init()
         self.screen_x, self.screen_y = (pygame.display.Info().current_w,
                                         pygame.display.Info().current_h)
-        self._set_distance_between_hubs()
-        pygame.display.set_icon(pygame.image.load("source/assets/fly-in_icone.png"))
-        self.screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
+        pygame.display.set_icon(pygame.image.load("source/assets/fly-in_icone."
+                                "png"))
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
         self.screen.fill(self.COLORS["black"])
         self.font = pygame.font.Font(None, 25)
 
-    def _get_screen_coords(self, x, y):
-        return self.converted_coordinates["x"][x], self.converted_coordinates["y"][y]
-
     def _initialize_drones(self):
-        self.drones = [DroneSprite(drone.id, "blue", 25, 25) for drone in self._graph.drones]
+        self.drones = [DroneSprite(drone.id, "blue", 25, 25) for drone in
+                       self._graph.drones]
         for drone in self.drones:
-            drone.draw(self.coords[self._graph.start_hub.name], self.screen)
+            drone.draw(self.coords[self._graph.start_hub.name], self.screen,
+                       self.font)
 
     def _print_places_capacity(self, current_turn):
-        for place_name, place_capacity in self._graph.capacity[current_turn].items():
+        for place_name, place_capacity in self._graph.capacity[
+                                        current_turn].items():
             text = self.font.render(place_capacity, True, "white", "black")
-            self.screen.blit(text, (self.coords[place_name][0] - 17.5, self.coords[place_name][1] - 60))
+            self.screen.blit(text, (self.coords[place_name][0] - 17.5,
+                                    self.coords[place_name][1] - 60))
 
     def _print_next_turn(self):
         if self.actual_turn != len(self._graph.tracks[1]):
@@ -133,12 +154,15 @@ class PygameView:
             self.current_turn += 1
             self.actual_turn += 1
             for i, drone in enumerate(self._graph.drones):
-                self.drones[i].draw(self.coords[self._graph.tracks[drone.id][self.current_turn][1]], self.screen)
+                self.drones[i].draw(self.coords[self._graph.tracks[drone.id][
+                    self.current_turn][1]], self.screen, self.font)
             self._print_places_capacity(self.actual_turn)
             self._print_turn_number()
             print(f"Turn {self.current_turn + 1}: ", end="")
             for drone in self.drones:
-                print(self._graph.tracks[drone.id][self.current_turn][0], end=" " if self._graph.tracks[drone.id][self.current_turn][0] != "" else "")
+                print(self._graph.tracks[drone.id][self.current_turn][0],
+                      end=" " if self._graph.tracks[drone.id][
+                          self.current_turn][0] != "" else "")
             print()
             pygame.display.flip()
 
@@ -148,7 +172,8 @@ class PygameView:
         self._print_names()
 
     def _print_turn_number(self):
-        text = self.font.render("Turn: " + str(self.actual_turn), True, "white", "black")
+        text = self.font.render("Turn: " + str(self.actual_turn), True,
+                                "white", "black")
         self.screen.blit(text, (0, 0))
 
     def display_graph(self):
