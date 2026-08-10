@@ -14,6 +14,8 @@ class Graph:
         self.hubs = {}
         for hub in map_config.hub:
             self.hubs[hub[0]] = Hub(hub, map_config.metadata[hub[0]])
+        self.hubs.update({self.start_hub.name: self.start_hub,
+                          self.end_hub.name: self.end_hub})
         self.connections = []
         for connection in map_config.connection:
             if connection[0] not in (self.start_hub.name, self.end_hub.name) and connection[1] not in (self.start_hub.name, self.end_hub.name):
@@ -41,7 +43,7 @@ class Graph:
             self.start_hub.drones[id + 1] = drone
         self.turns = 0
         self.tracks = {drone.id: [] for drone in self.drones}
-        self.capacity = [{place.name: f"{len(place.drones)}/{place.max_drones}" for place in list(self.hubs.values()) + [self.start_hub, self.end_hub]}]
+        self.capacity = [{place.name: f"{len(place.drones)}/{place.max_drones}" for place in list(self.hubs.values())}]
 
     def _set_pathfinder(self):
         self.pathfinder = Pathfinder(self.start_hub, self.end_hub, self.hubs, self.connections)
@@ -94,7 +96,7 @@ class Graph:
                                         to_avoid.add(path[0])
                                 else:
                                     break
-            self.capacity.append({place.name: f"{len(place.drones)}/{place.max_drones}" for place in list(self.hubs.values()) + [self.start_hub, self.end_hub]})
+            self.capacity.append({place.name: f"{len(place.drones)}/{place.max_drones}" for place in list(self.hubs.values())})
             for connection in self.connections:
                 connection.reset()
             self.turns += 1

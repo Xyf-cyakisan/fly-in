@@ -53,10 +53,6 @@ class PygameView:
     def _draw_hubs(self):
         for hub in self._graph.hubs.values():
             self._draw_circle(self.COLORS[hub.color], self.coords[hub.name])
-        self._draw_circle(self.COLORS[self._graph.start_hub.color],
-                          self.coords[self._graph.start_hub.name])
-        self._draw_circle(self.COLORS[self._graph.end_hub.color],
-                          self.coords[self._graph.end_hub.name])
 
     def _print_names(self):
         for hub in self._graph.hubs.values():
@@ -64,22 +60,14 @@ class PygameView:
             coords = self.coords[hub.name]
             coords = (coords[0] - 35, coords[1] + 45)
             self.screen.blit(text, coords)
-        text = self.font.render(self._graph.start_hub.name, True, "white", "black")
-        coords = self.coords[self._graph.start_hub.name]
-        coords = (coords[0] - 35, coords[1] + 45)
-        self.screen.blit(text, coords)
-        text = self.font.render(self._graph.end_hub.name, True, "white", "black")
-        coords = self.coords[self._graph.end_hub.name]
-        coords = (coords[0] - 35, coords[1] + 45)
-        self.screen.blit(text, coords)
 
     def _set_distance_between_hubs(self):
         min_v = {}
-        min_v["x"] = min([hub.coordinates[0] for hub in self._graph.hubs.values()] + [self._graph.start_hub.coordinates[0], self._graph.end_hub.coordinates[0]])
-        min_v["y"] = min([hub.coordinates[1] for hub in self._graph.hubs.values()] + [self._graph.start_hub.coordinates[1], self._graph.end_hub.coordinates[1]])
+        min_v["x"] = min([hub.coordinates[0] for hub in self._graph.hubs.values()])
+        min_v["y"] = min([hub.coordinates[1] for hub in self._graph.hubs.values()])
         max_v = {}
-        max_v["x"] = max([hub.coordinates[0] for hub in self._graph.hubs.values()] + [self._graph.start_hub.coordinates[0], self._graph.end_hub.coordinates[0]])
-        max_v["y"] = max([hub.coordinates[1] for hub in self._graph.hubs.values()] + [self._graph.start_hub.coordinates[1], self._graph.end_hub.coordinates[1]])
+        max_v["x"] = max([hub.coordinates[0] for hub in self._graph.hubs.values()])
+        max_v["y"] = max([hub.coordinates[1] for hub in self._graph.hubs.values()])
         covered_by_map_x = self.screen_x * 0.85
         covered_by_map_y = self.screen_y * 0.90
         distance_between = {
@@ -107,8 +95,6 @@ class PygameView:
 
     def _initialize_coords_dict(self):
         self.coords = {}
-        self.coords[self._graph.start_hub.name] = self._get_screen_coords(*self._graph.start_hub.coordinates)
-        self.coords[self._graph.end_hub.name] = self._get_screen_coords(*self._graph.end_hub.coordinates)
         for hub in self._graph.hubs.values():
             self.coords[hub.name] = self._get_screen_coords(*hub.coordinates)
         for connection in self._graph.connections:

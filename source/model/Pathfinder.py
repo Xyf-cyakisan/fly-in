@@ -14,7 +14,7 @@ class Pathfinder:
 
     def find_shortest_path(self, og_position,  to_avoid):
         self._setup_graph_values()
-        fastest_paths = {hub.name: [float("inf"), []] for hub in list(self.hubs.values()) + [self.end_hub, self.start_hub]}
+        fastest_paths = {hub.name: [float("inf"), []] for hub in list(self.hubs.values())}
         queue = [(0, og_position, [])]
         current_path = []
         while queue:
@@ -68,13 +68,7 @@ class Pathfinder:
             return [hub[0] for hub in queue].index(min([hub[0] for hub in queue]))
 
     def _setup_graph_values(self):
-        self.values = {self.start_hub.name: 1}
-        try:
-            self.end_hub.zone
-        except AttributeError:
-            self.values[self.end_hub.name] = 1
-        else:
-            self.values[self.end_hub.name] = self.VALUES[self.end_hub.zone]
+        self.values = {}
         for hub_name in self.hubs.keys():
             try:
                 self.hubs[hub_name].zone
