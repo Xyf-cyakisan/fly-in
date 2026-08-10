@@ -129,7 +129,6 @@ class PygameView:
     def _print_next_turn(self):
         if self.actual_turn != len(self._graph.tracks[1]):
             self.screen.fill(self.COLORS["black"])
-
             self._reset_map()
             self.current_turn += 1
             self.actual_turn += 1
