@@ -41,8 +41,8 @@ class PygameView:
         self.actual_turn = 0
 
     def _draw_circle(self, color, coords):
-        around = self.COLORS["darkgrey"]
-        if color == self.COLORS["black"]:
+        around = self.COLORS["black"]
+        if color == around:
             around = self.COLORS["default"]
         pygame.draw.circle(self.screen, around, coords, 35)
         pygame.draw.circle(self.screen, color, coords, 30)
@@ -131,7 +131,7 @@ class PygameView:
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
-        self.screen.fill(self.COLORS["black"])
+        self.screen.fill(self.COLORS["darkgrey"])
         self.font = pygame.font.Font(None, 25)
 
     def _initialize_drones(self):
@@ -150,7 +150,7 @@ class PygameView:
 
     def _print_next_turn(self):
         if self.actual_turn != len(self._graph.tracks[1]):
-            self.screen.fill(self.COLORS["black"])
+            self.screen.fill(self.COLORS["darkgrey"])
             self._reset_map()
             self.current_turn += 1
             self.actual_turn += 1
@@ -180,7 +180,7 @@ class PygameView:
     def _reset_whole_visual(self):
         self.actual_turn = 0
         self.current_turn = -1
-        self.screen.fill(self.COLORS["black"])
+        self.screen.fill(self.COLORS["darkgrey"])
         self._reset_map()
         self._initialize_drones()
         self._print_turn_number()
