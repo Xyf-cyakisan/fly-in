@@ -14,7 +14,8 @@ class PygameView:
 
     COLORS: dict[str, str | tuple[int, int, int]] = {
         'default': "white",
-        "black": (40, 40, 45),
+        "black": (0, 0, 0),
+        "darkgrey": (40, 40, 45),
         "blue": (0, 128, 255),
         "brown": (120, 70, 30),
         "crimson": (220, 20, 60),
@@ -40,8 +41,8 @@ class PygameView:
         self.actual_turn = 0
 
     def _draw_circle(self, color, coords):
-        around = self.COLORS["black"]
-        if color == around:
+        around = self.COLORS["darkgrey"]
+        if color == self.COLORS["black"]:
             around = self.COLORS["default"]
         pygame.draw.circle(self.screen, around, coords, 35)
         pygame.draw.circle(self.screen, color, coords, 30)
@@ -176,6 +177,16 @@ class PygameView:
                                 "white", "black")
         self.screen.blit(text, (0, 0))
 
+    def _reset_whole_visual(self):
+        self.actual_turn = 0
+        self.current_turn = -1
+        self.screen.fill(self.COLORS["black"])
+        self._reset_map()
+        self._initialize_drones()
+        self._print_turn_number()
+        self._print_places_capacity(self.actual_turn)
+        pygame.display.flip()
+
     def display_graph(self):
         self._initialize_pygame()
         self._initialize_coords_dict()
@@ -193,6 +204,8 @@ class PygameView:
                         running = False
                     elif event.key == pygame.K_SPACE:
                         self._print_next_turn()
+                    elif event.key == pygame.K_r:
+                        self._reset_whole_visual()
         pygame.quit()
 
 
