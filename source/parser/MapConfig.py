@@ -3,7 +3,7 @@ from typing import Any
 
 class MapConfig:
 
-    COLORS = [
+    COLORS: list[str] = [
         "red",
         "blue",
         "yellow",
@@ -31,7 +31,7 @@ class MapConfig:
         "connection",
     ]
 
-    VALID_METADATA = {
+    VALID_METADATA: dict[str, dict[str, list[str] | None]] = {
         "hub": {
             "color": COLORS,
             "max_drones": None,
@@ -45,8 +45,11 @@ class MapConfig:
     }
 
     def __init__(
-        self, nb_drones, start_hub, end_hub, hub, connection, metadata
-    ):
+        self, nb_drones: int, start_hub: tuple[str, int, int],
+        end_hub: tuple[str, int, int], hub: list[tuple[str, int, int]],
+        connection: list[tuple[str, str]],
+        metadata: dict[str, dict[str, str | int | None] | None]
+    ) -> None:
         self.nb_drones = nb_drones
         self.start_hub = start_hub
         self.end_hub = end_hub
@@ -59,6 +62,7 @@ class MapConfig:
         content, lines = cls._read_file(map_name)
         raw_data = cls._convert_content_to_dict(content, lines)
         cls._all_data_types_covered(raw_data)
+        raw_data = cls._convert_nb_drones_value_type(raw_data)
         raw_data = cls._convert_hubs_value_type(raw_data)
         raw_data = cls._convert_connections_value_type(raw_data)
         cls._check_hub_names(raw_data)
@@ -70,12 +74,12 @@ class MapConfig:
         return cls(**raw_data)
 
     @staticmethod
-    def _read_file(map_name: str) -> list[str]:
+    def _read_file(map_name: str) -> tuple[list[str], list[str]]:
         if not isinstance(map_name, str):
             raise FileNotFoundError("Error: Map not found, "
                                     "please run the program like "
                                     "so: 'make run MAP='<map_file_path>''")
-        content: list[str] = []
+        content = []
         lines = []
         try:
             with open(map_name, "r") as map:
@@ -96,11 +100,11 @@ class MapConfig:
             return content, lines
 
     @staticmethod
-    def _check_mandatory_data(line: str, line_number: int) -> list[str]:
-        list_data = line[1][
+    def _check_mandatory_data(line: list[str], line_number: str) -> list[str]:
+        str_data = line[1][
             : (line[1].find("[") if line[1].find("[") != -1 else len(line[1]))
         ]
-        list_data = [value for value in list_data.split(" ") if value != ""]
+        list_data = [value for value in str_data.split(" ") if value != ""]
         if "hub" in line[0] and len(list_data) != 3:
             raise ValueError(
                 f"Error (line {line_number}): {line[0]} "
@@ -127,7 +131,7 @@ class MapConfig:
 
     @classmethod
     def _check_metadata(
-        cls, line: list[str], line_number: int
+        cls, line: list[str], line_number: str
     ) -> dict[str, str] | None:
         brackets = (line[1].find("["), line[1].find("]"))
         if brackets[0] == -1 and brackets[1] == -1:
@@ -142,43 +146,42 @@ class MapConfig:
                 "syntax is [metadata1=value1 metadata2=value2] "
                 "at the end of the line"
             )
-        raw_metadata = line[1][brackets[0] + 1: brackets[1]]
-        raw_metadata = [
-            value for value in raw_metadata.split(" ") if value != ""
+        str_metadata = line[1][brackets[0] + 1: brackets[1]]
+        list_metadata = [
+            value for value in str_metadata.split(" ") if value != ""
         ]
-        if raw_metadata == []:
+        if list_metadata == []:
             raise ValueError(
                 f"Error (line {line_number}): metadata "
                 "syntax is [metadata1=value1 metadata2=value2] "
                 "at the end of the line"
             )
-        list_metadata = []
-        for metadata in raw_metadata:
-            splitted_metadata = metadata.split("=")
-            if len(splitted_metadata) != 2:
+        dict_metadata = {}
+        for one_line_metadata in list_metadata:
+            metadata = one_line_metadata.split("=")
+            if len(metadata) != 2:
                 raise ValueError(
                     f"Error (line {line_number}): metadata "
                     "syntax is [metadata1=value1 metadata2=value2] "
                     "at the end of the line"
                 )
             else:
-                list_metadata.append(splitted_metadata)
-        dict_metadata = {}
-        for metadata in list_metadata:
-            if (
-                line[0] not in cls.VALID_METADATA.keys()
-                or metadata[0] not in cls.VALID_METADATA[line[0]].keys()
-                or cls.VALID_METADATA[line[0]][metadata[0]] is not None
-                and metadata[1] not in cls.VALID_METADATA[line[0]][metadata[0]]
-            ):
-                if metadata[0] == "color" and len(metadata[1].split(" ")) == 1:
-                    metadata[1] = "default"
-                else:
-                    raise ValueError(
-                        f"Error (line {line_number}): this metadata type "
-                        f"is not possible ({metadata[0]}={metadata[1]})"
-                    )
-            dict_metadata[metadata[0]] = metadata[1]
+                if (
+                    line[0] not in cls.VALID_METADATA.keys()
+                    or metadata[0] not in cls.VALID_METADATA[line[0]].keys()
+                    or cls.VALID_METADATA[line[0]][metadata[0]] is not None
+                    and metadata[1] not in cls.VALID_METADATA[line[0]][
+                        metadata[0]]
+                ):
+                    if (metadata[0] == "color" and
+                       len(metadata[1].split(" ")) == 1):
+                        metadata[1] = "default"
+                    else:
+                        raise ValueError(
+                            f"Error (line {line_number}): this metadata type "
+                            f"is not possible ({metadata[0]}={metadata[1]})"
+                        )
+                dict_metadata[metadata[0]] = metadata[1]
         return dict_metadata
 
     @staticmethod
@@ -271,7 +274,7 @@ class MapConfig:
             dict_content["end_hub"] = dict_content["end_hub"].pop()
 
     @staticmethod
-    def _convert_hubs_value_type(dict_content) -> dict:
+    def _convert_nb_drones_value_type(dict_content) -> dict:
         try:
             dict_content["nb_drones"] = int(dict_content["nb_drones"])
             if dict_content["nb_drones"] <= 0:
@@ -281,6 +284,10 @@ class MapConfig:
                 f"Error (line {dict_content['lines']['nb_drones']}): "
                 "nb_drones needs to be a positive integer higher than 0"
             )
+        return dict_content
+
+    @staticmethod
+    def _convert_hubs_value_type(dict_content) -> dict:
         try:
             dict_content["start_hub"][1] = int(dict_content["start_hub"][1])
             dict_content["start_hub"][2] = int(dict_content["start_hub"][2])
@@ -324,7 +331,7 @@ class MapConfig:
 
     @classmethod
     def _convert_content_to_dict(
-        cls, content: list[str], lines
+        cls, content: list[str], lines: list[str]
     ) -> dict[str, Any]:
         dict_content = {
             "nb_drones": None,
@@ -392,7 +399,7 @@ class MapConfig:
                         )
         return dict_content
 
-    def _check_metadata_type(dict_content) -> None:
+    def _check_metadata_type(dict_content: dict[str, Any]) -> None:
         if isinstance(
             dict_content["metadata"][dict_content["start_hub"][0]], dict
         ) and dict_content["metadata"][dict_content["start_hub"][0]].get(
@@ -517,7 +524,8 @@ class MapConfig:
                     connection[0] + "-" + connection[1]] = (
                         {"max_link_capacity": 1})
 
-    def _check_coordinates_duplicate(dict_content) -> "MapConfig":
+    def _check_coordinates_duplicate(dict_content: dict[str, Any]
+                                     ) -> dict[str, Any]:
         if (
             dict_content["start_hub"][1] == dict_content["end_hub"][1]
             and dict_content["start_hub"][2] == dict_content["end_hub"][2]

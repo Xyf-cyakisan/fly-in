@@ -10,51 +10,60 @@ class Connection:
         self.max_link_capacity = max_link_capacity["max_link_capacity"]
         self.drones = {}
         self.passed_through = 0
+        self.place_type = "connection"
 
     def _get_destination(self, drone_zone):
         if drone_zone.name == self.hubs[0].name:
             try:
-                self.hubs[1].zone
+                self.hubs[1].type
             except AttributeError:
                 return self.hubs[1]
             else:
-                if self.hubs[1].zone == "restricted":
+                if self.hubs[1].type == "restricted":
                     return self
                 else:
                     return self.hubs[1]
         elif drone_zone.name == self.hubs[1].name:
             try:
-                self.hubs[0].zone
+                self.hubs[0].type
             except AttributeError:
                 return self.hubs[0]
             else:
-                if self.hubs[0].zone == "restricted":
+                if self.hubs[0].type == "restricted":
                     return self
                 else:
                     return self.hubs[0]
         else:
-            raise ValueError(f"Error: {drone_zone.name} is not "
-                             "any of the two linked "
-                             "connections ("
-                             f"{self.hubs[0].name, self.hubs[1].name}).")
+            raise ValueError(
+                f"Error: {drone_zone.name} is not "
+                "any of the two linked "
+                "connections ("
+                f"{self.hubs[0].name, self.hubs[1].name})."
+            )
 
     def _destination_accessible(self, drone):
         if self.passed_through == self.max_link_capacity:
             return False
         zone = self._get_destination(drone.place)
-        max_drones = (zone.max_drones
-                      if isinstance(zone, Hub) else zone.max_link_capacity)
+        max_drones = (
+            zone.max_drones
+            if zone.place_type == "hub"
+            else zone.max_link_capacity
+        )
         nb_drones = len(zone.drones)
-        if not isinstance(zone, Connection):
+        if zone.place_type != "connection":
             if max_drones > nb_drones:
                 return True
             else:
                 return False
         else:
-            restricted_hub = (zone.hubs[0]
-                              if drone.place == zone.hubs[1] else zone.hubs[1])
-            if (check_restricted_connections(restricted_hub)
-                    == restricted_hub.max_drones):
+            restricted_hub = (
+                zone.hubs[0] if drone.place == zone.hubs[1] else zone.hubs[1]
+            )
+            if (
+                check_restricted_connections(restricted_hub)
+                == restricted_hub.max_drones
+            ):
                 return False
             else:
                 return True

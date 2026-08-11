@@ -1,21 +1,32 @@
+from ..model.Connection import Connection
+from ..model.Hub import Hub
+
+
 class Pathfinder:
-    VALUES = {
+    VALUES: dict[str, int] = {
         "restricted": 2,
         "normal": 1,
         "priority": 1,
-        "blocked": float("inf")
+        "blocked": float("inf"),
     }
 
-    def __init__(self, start_hub, end_hub, hubs, connections):
+    def __init__(
+        self,
+        start_hub: Hub,
+        end_hub: Hub,
+        hubs: dict[str, Hub],
+        connections: list[Connection],
+    ) -> None:
         self.start_hub = start_hub
         self.end_hub = end_hub
         self.hubs = hubs
         self.connections = connections
 
-    def find_shortest_path(self, og_position,  to_avoid):
+    def find_shortest_path(self, og_position, to_avoid):
         self._setup_graph_values()
-        fastest_paths = {hub.name: [float("inf"), []] for hub in
-                         list(self.hubs.values())}
+        fastest_paths = {
+            hub.name: [float("inf"), []] for hub in list(self.hubs.values())
+        }
         queue = [(0, og_position, [])]
         current_path = []
         while queue:
@@ -26,28 +37,40 @@ class Pathfinder:
             if current[0] > fastest_paths[current[1].name][0]:
                 continue
             else:
-                neighbors = self._get_neighbors_of_hub(current[1],
-                                                       current_path, to_avoid)
+                neighbors = self._get_neighbors_of_hub(
+                    current[1], current_path, to_avoid
+                )
                 for neighbor in neighbors:
                     distance = current[0] + self.values[neighbor.name]
-                    if (distance < fastest_paths[neighbor.name][0] or distance
-                       == fastest_paths[neighbor.name][0] and
-                       self.check_priority_in_path(fastest_paths[
-                           neighbor.name][1]) is False and
-                       self.check_priority_in_path(current_path + [neighbor])
-                       is True):
-                        queue.append((distance, neighbor, current_path + [
-                            neighbor]))
-                        fastest_paths[neighbor.name] = (distance,
-                                                        current_path + [
-                                                            neighbor])
+                    if (
+                        distance < fastest_paths[neighbor.name][0]
+                        or distance == fastest_paths[neighbor.name][0]
+                        and self.check_priority_in_path(
+                            fastest_paths[neighbor.name][1]
+                        )
+                        is False
+                        and self.check_priority_in_path(
+                            current_path + [neighbor]
+                        )
+                        is True
+                    ):
+                        queue.append(
+                            (distance, neighbor, current_path + [neighbor])
+                        )
+                        fastest_paths[neighbor.name] = (
+                            distance,
+                            current_path + [neighbor],
+                        )
         return fastest_paths[self.end_hub.name][1]
 
     def _get_neighbors_of_hub(self, hub, current_path, to_avoid):
         neighbors = []
         for connection in hub.connections:
-            neighbor = (connection.hubs[0] if hub
-                        == connection.hubs[1] else connection.hubs[1])
+            neighbor = (
+                connection.hubs[0]
+                if hub == connection.hubs[1]
+                else connection.hubs[1]
+            )
             if neighbor not in current_path and neighbor not in to_avoid:
                 neighbors.append(neighbor)
         return neighbors
@@ -55,11 +78,11 @@ class Pathfinder:
     def check_priority_in_path(self, hubs):
         for hub in hubs:
             try:
-                hub.zone
+                hub.type
             except AttributeError:
                 continue
             else:
-                if hub.zone == "priority":
+                if hub.type == "priority":
                     return True
         return False
 
@@ -67,25 +90,25 @@ class Pathfinder:
         if self.check_priority_in_path([hub[1] for hub in queue]):
             for _, hub, _ in queue:
                 try:
-                    hub.zone
+                    hub.type
                 except AttributeError:
                     continue
                 else:
-                    if hub.zone == "priority":
+                    if hub.type == "priority":
                         priorised = hub
                         break
             return [hub[1] for hub in queue].index(priorised)
         else:
-            return [hub[0] for hub in queue].index(min([hub[0]
-                                                        for hub in queue]))
+            return [hub[0] for hub in queue].index(
+                min([hub[0] for hub in queue])
+            )
 
     def _setup_graph_values(self):
         self.values = {}
         for hub_name in self.hubs.keys():
             try:
-                self.hubs[hub_name].zone
+                self.hubs[hub_name].type
             except AttributeError:
                 self.values[hub_name] = 1
             else:
-                self.values[hub_name] = (
-                    self.VALUES[self.hubs[hub_name].zone])
+                self.values[hub_name] = self.VALUES[self.hubs[hub_name].type]
