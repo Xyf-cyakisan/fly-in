@@ -33,14 +33,17 @@ class Connection:
                 else:
                     return self.hubs[0]
         else:
-            raise ValueError(f"Error: {drone_zone.name} is not any of the two linked "
-                             f"connections ({self.hubs[0].name, self.hubs[1].name}).")
+            raise ValueError(f"Error: {drone_zone.name} is not "
+                             "any of the two linked "
+                             "connections ("
+                             f"{self.hubs[0].name, self.hubs[1].name}).")
 
     def _destination_accessible(self, drone):
         if self.passed_through == self.max_link_capacity:
             return False
         zone = self._get_destination(drone.place)
-        max_drones = zone.max_drones if isinstance(zone, Hub) else zone.max_link_capacity
+        max_drones = (zone.max_drones
+                      if isinstance(zone, Hub) else zone.max_link_capacity)
         nb_drones = len(zone.drones)
         if not isinstance(zone, Connection):
             if max_drones > nb_drones:
@@ -48,8 +51,10 @@ class Connection:
             else:
                 return False
         else:
-            restricted_hub = zone.hubs[0] if drone.place == zone.hubs[1] else zone.hubs[1]
-            if check_restricted_connections(restricted_hub) == restricted_hub.max_drones:
+            restricted_hub = (zone.hubs[0]
+                              if drone.place == zone.hubs[1] else zone.hubs[1])
+            if (check_restricted_connections(restricted_hub)
+                    == restricted_hub.max_drones):
                 return False
             else:
                 return True

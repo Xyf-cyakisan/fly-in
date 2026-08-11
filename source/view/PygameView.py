@@ -65,7 +65,8 @@ class PygameView:
                 hub_type = "normal"
             else:
                 hub_type = hub.zone
-            self._draw_circle(self.COLORS[hub.color], self.coords[hub.name], hub_type)
+            self._draw_circle(self.COLORS[hub.color], self.coords[hub.name],
+                              hub_type)
 
     def _print_names(self):
         for hub in self._graph.hubs.values():
