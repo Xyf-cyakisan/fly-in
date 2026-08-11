@@ -40,10 +40,14 @@ class PygameView:
         self.current_turn = -1
         self.actual_turn = 0
 
-    def _draw_circle(self, color, coords):
-        around = self.COLORS["black"]
-        if color == around:
-            around = self.COLORS["default"]
+    def _draw_circle(self, color, coords, hub_type):
+        hub_type_color = {
+            "priority": "blue",
+            "normal": "black",
+            "restricted": "red",
+            "blocked": "brown"
+        }
+        around = hub_type_color[hub_type]
         pygame.draw.circle(self.screen, around, coords, 35)
         pygame.draw.circle(self.screen, color, coords, 30)
 
@@ -55,7 +59,13 @@ class PygameView:
 
     def _draw_hubs(self):
         for hub in self._graph.hubs.values():
-            self._draw_circle(self.COLORS[hub.color], self.coords[hub.name])
+            try:
+                hub.zone
+            except AttributeError:
+                hub_type = "normal"
+            else:
+                hub_type = hub.zone
+            self._draw_circle(self.COLORS[hub.color], self.coords[hub.name], hub_type)
 
     def _print_names(self):
         for hub in self._graph.hubs.values():

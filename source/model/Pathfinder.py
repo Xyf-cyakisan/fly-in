@@ -77,12 +77,3 @@ class Pathfinder:
             else:
                 self.values[hub_name] = (
                     self.VALUES[self.hubs[hub_name].zone])
-
-    def _get_connected(self, current, path):
-        connected = []
-        for connection in current.connections:
-            if current == connection.hubs[0] and connection.hubs[1].name in self.values.keys() and connection.hubs[1] not in path:
-                connected.append((self.values[connection.hubs[1].name], connection.hubs[1]))
-            elif current == connection.hubs[1] and connection.hubs[0].name in self.values.keys() and connection.hubs[0] not in path:
-                connected.append((self.values[connection.hubs[0].name], connection.hubs[0]))
-        return connected
