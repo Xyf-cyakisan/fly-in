@@ -1,5 +1,5 @@
 from typing import Protocol
-from ..model import Drone
+from ..model.Drone import Drone
 
 
 class Place(Protocol):

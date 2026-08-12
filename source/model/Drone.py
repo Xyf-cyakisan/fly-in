@@ -1,4 +1,7 @@
-from .Place import Place
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .Place import Place
 
 
 class Drone:

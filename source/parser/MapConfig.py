@@ -169,10 +169,14 @@ class MapConfig:
                 if (
                     line[0] not in cls.VALID_METADATA.keys()
                     or metadata[0] not in cls.VALID_METADATA[line[0]].keys()
-                    or cls.VALID_METADATA[line[0]][metadata[0]] is not None
-                    and metadata[1] not in cls.VALID_METADATA[line[0]][
-                        metadata[0]]
                 ):
+                    raise ValueError(
+                        f"Error (line {line_number}): this metadata type "
+                        f"is not possible ({metadata[0]}={metadata[1]})"
+                    )
+                allowed_values = cls.VALID_METADATA[line[0]][metadata[0]]
+                if (allowed_values is not None and metadata[1]
+                   not in allowed_values):
                     if (metadata[0] == "color" and
                        len(metadata[1].split(" ")) == 1):
                         metadata[1] = "default"
