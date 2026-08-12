@@ -4,8 +4,8 @@ from ..view.PygameView import PygameView
 
 
 class Controller:
-    def __init__(self, map_config_file: str):
-        self.map_config_file: str = map_config_file
+    def __init__(self, map_config_file: str | None):
+        self.map_config_file: str | None = map_config_file
 
     def __set_config(self) -> None:
         self.__map_config: MapConfig = MapConfig.parse(self.map_config_file)

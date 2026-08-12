@@ -58,7 +58,7 @@ class MapConfig:
         self.metadata = metadata
 
     @classmethod
-    def parse(cls, map_name: str) -> "MapConfig":
+    def parse(cls, map_name: str | None) -> "MapConfig":
         content, lines = cls._read_file(map_name)
         raw_data = cls._convert_content_to_dict(content, lines)
         cls._all_data_types_covered(raw_data)
@@ -74,7 +74,7 @@ class MapConfig:
         return cls(**raw_data)
 
     @staticmethod
-    def _read_file(map_name: str) -> tuple[list[str], list[str]]:
+    def _read_file(map_name: str | None) -> tuple[list[str], list[str]]:
         if not isinstance(map_name, str):
             raise FileNotFoundError("Error: Map not found, "
                                     "please run the program like "

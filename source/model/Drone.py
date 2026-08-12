@@ -11,8 +11,8 @@ class Drone:
         self.place: Place = start_hub
         self.previous_place: Place | None | Hub = None
 
-    def set_path(self, path: list[Hub]) -> None:
-        self.path: list[Hub] = path
+    def set_path(self, path: list[Place]) -> None:
+        self.path: list[Place] = path
 
     def move(self) -> str:
         previous_place = (

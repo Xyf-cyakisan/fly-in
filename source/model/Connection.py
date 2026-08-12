@@ -11,10 +11,12 @@ from ..utils.simulation_funcs import check_restricted_connections
 
 class Connection:
     def __init__(self, hubs: tuple[Hub, Hub],
-                 max_link_capacity: dict[str, int]) -> None:
+                 max_link_capacity: dict[str, str | int | None] | None
+                 ) -> None:
         self.name: str = hubs[0].name + "-" + hubs[1].name
         self.hubs: list[Hub] = list(hubs)
-        self.max_link_capacity: int = max_link_capacity["max_link_capacity"]
+        self.max_link_capacity: int | str | None = (max_link_capacity.get(
+            "max_link_capacity") if max_link_capacity is not None else 1)
         self.drones: dict[int, Drone] = {}
         self.passed_through: int = 0
         self.place_type: str = "connection"

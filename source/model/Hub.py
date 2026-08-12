@@ -11,7 +11,7 @@ class Hub:
     def __init__(
         self,
         primary_data: tuple[str, int, int],
-        metadata: dict[str, str | int],
+        metadata: dict[str, str | int | None] | None,
     ) -> None:
         self.drones: dict[int, Drone] = {}
         self.name: str = primary_data[0]

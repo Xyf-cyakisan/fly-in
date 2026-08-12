@@ -32,20 +32,23 @@ class Graph:
             self.drones.append(drone)
             self.start_hub.drones[id + 1] = drone
         self.turns: int = 0
-        self.tracks: dict[int, list[str]] = {drone.id: [] for drone in
-                                             self.drones}
-        self.capacity: dict[str, str] = [{place.name: f"{len(place.drones)}"
-                                          f"/{place.max_drones}" for
-                                          place in list(self.hubs.values())}]
+        self.tracks: dict[int, list[tuple[str, str] | str]] = {drone.id: [] for
+                                                               drone in
+                                                               self.drones}
+        self.capacity: list[dict[str, str]] = [{
+            place.name: f"{len(place.drones)}/{getattr(place, "max_drones",
+                                                       1)}"
+                        for place in list(self.hubs.values())}]
 
-    def _set_pathfinder(self):
+    def _set_pathfinder(self) -> None:
         self.pathfinder: Pathfinder = Pathfinder(self.start_hub,
                                                  self.end_hub, self.hubs,
                                                  self.connections)
 
-    def _set_drones_path(self):
+    def _set_drones_path(self) -> None:
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_path(drone.place, {}))
+            drone.set_path(self.pathfinder.find_shortest_path(drone.place,
+                                                              set()))
 
     def run_simulation(self) -> None:
         self._set_pathfinder()
@@ -57,9 +60,8 @@ class Graph:
                     continue
                 else:
                     try:
-                        self.tracks[drone.id].append(drone.move())
-                        self.tracks[drone.id][-1] = (self.tracks[drone.id][
-                            -1], drone.place.name)
+                        move = drone.move()
+                        self.tracks[drone.id].append((move, drone.place.name))
                     except MovementError:
                         original_path = drone.path
                         to_avoid = {drone.path[0]}
@@ -80,9 +82,9 @@ class Graph:
                         else:
                             while True:
                                 try:
-                                    self.tracks[drone.id].append(drone.move())
-                                    self.tracks[drone.id][-1] = (self.tracks[
-                                        drone.id][-1], drone.place.name)
+                                    move = drone.move()
+                                    self.tracks[drone.id].append(
+                                        (move, drone.place.name))
                                 except MovementError:
                                     to_avoid.add(drone.path[0])
                                     path = self.pathfinder.find_shortest_path(
@@ -100,7 +102,8 @@ class Graph:
                                 else:
                                     break
             self.capacity.append(
-                {place.name: f"{len(place.drones)}/{place.max_drones}"
+                {place.name: f"{len(place.drones)}/{getattr(place,
+                                                            "max_drones", 1)}"
                  for place in list(self.hubs.values())})
             for connection in self.connections:
                 connection.reset()
