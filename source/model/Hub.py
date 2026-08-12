@@ -13,29 +13,29 @@ class Hub:
         primary_data: tuple[str, int, int],
         metadata: dict[str, str | int],
     ) -> None:
-        self.drones = {}
-        self.name = primary_data[0]
-        self.coordinates = (primary_data[1], primary_data[2])
+        self.drones: dict[int, Drone] = {}
+        self.name: str = primary_data[0]
+        self.coordinates: tuple[int, int] = (primary_data[1], primary_data[2])
         if metadata is not None:
             for key, value in metadata.items():
                 if key == 'zone':
                     key = "type"
                 setattr(self, key, value)
-        self.connections = []
-        self.place_type = "hub"
+        self.connections: list[Connection] = []
+        self.place_type: str = "hub"
 
     def setup_connection(self, connection: Connection) -> None:
         self.connections.append(connection)
 
     def drone_arrival(self, drone: Drone) -> None:
-        try:
-            self.type
-        except AttributeError:
+        type = getattr(self, "type", None)
+        if type is None:
             ...
         else:
-            if self.type == "blocked":
+            if type == "blocked":
                 raise MovementError
-        if self.max_drones == len(self.drones):
+        max_drones = getattr(self, "max_drones", None)
+        if max_drones == len(self.drones):
             raise MovementError
         else:
             self.drones[drone.id] = drone

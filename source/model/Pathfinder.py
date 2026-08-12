@@ -3,7 +3,7 @@ from ..model.Hub import Hub
 
 
 class Pathfinder:
-    VALUES: dict[str, int] = {
+    VALUES: dict[str, int | float] = {
         "restricted": 2,
         "normal": 1,
         "priority": 1,
@@ -17,17 +17,18 @@ class Pathfinder:
         hubs: dict[str, Hub],
         connections: list[Connection],
     ) -> None:
-        self.start_hub = start_hub
-        self.end_hub = end_hub
-        self.hubs = hubs
-        self.connections = connections
+        self.start_hub: Hub = start_hub
+        self.end_hub: Hub = end_hub
+        self.hubs: dict[str, Hub] = hubs
+        self.connections: list[Connection] = connections
 
-    def find_shortest_path(self, og_position, to_avoid):
+    def find_shortest_path(self, og_position: Hub, to_avoid: set[Hub]
+                           ) -> list[Hub]:
         self._setup_graph_values()
-        fastest_paths = {
+        fastest_paths: dict[str, list[float | int | list[Hub]]] = {
             hub.name: [float("inf"), []] for hub in list(self.hubs.values())
         }
-        queue = [(0, og_position, [])]
+        queue: list[tuple[int, Hub, list[Hub]]] = [(0, og_position, [])]
         current_path = []
         while queue:
             cheapest = self._get_cheapest(queue)
@@ -63,7 +64,8 @@ class Pathfinder:
                         )
         return fastest_paths[self.end_hub.name][1]
 
-    def _get_neighbors_of_hub(self, hub, current_path, to_avoid):
+    def _get_neighbors_of_hub(self, hub: Hub, current_path: list[Hub],
+                              to_avoid: set[Hub]) -> list[Hub]:
         neighbors = []
         for connection in hub.connections:
             neighbor = (
@@ -75,11 +77,10 @@ class Pathfinder:
                 neighbors.append(neighbor)
         return neighbors
 
-    def check_priority_in_path(self, hubs):
+    def check_priority_in_path(self, hubs: list[Hub]) -> bool:
         for hub in hubs:
-            try:
-                hub.type
-            except AttributeError:
+            hub_type = getattr(hub, "type", None)
+            if hub_type is None:
                 continue
             else:
                 if hub.type == "priority":
@@ -103,7 +104,7 @@ class Pathfinder:
                 min([hub[0] for hub in queue])
             )
 
-    def _setup_graph_values(self):
+    def _setup_graph_values(self) -> None:
         self.values = {}
         for hub_name in self.hubs.keys():
             try:

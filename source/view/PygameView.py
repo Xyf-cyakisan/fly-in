@@ -1,4 +1,6 @@
 import os
+
+from ..model.Graph import Graph
 from .models import DroneSprite
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
@@ -39,10 +41,10 @@ class PygameView:
         "grey": (192, 192, 192),
     }
 
-    def __init__(self, graph):
-        self._graph = graph
-        self.current_turn = -1
-        self.actual_turn = 0
+    def __init__(self, graph: Graph) -> None:
+        self._graph: Graph = graph
+        self.current_turn: int = -1
+        self.actual_turn: int = 0
 
     def _draw_circle(self, color, coords, hub_type):
         hub_type_color = {

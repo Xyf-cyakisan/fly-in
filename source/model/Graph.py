@@ -9,16 +9,16 @@ from ..utils.simulation_funcs import get_path_len
 
 class Graph:
     def __init__(self, map_config: MapConfig):
-        self.start_hub = Hub(map_config.start_hub,
-                             map_config.metadata[map_config.start_hub[0]])
-        self.end_hub = Hub(map_config.end_hub,
-                           map_config.metadata[map_config.end_hub[0]])
-        self.hubs = {}
+        self.start_hub: Hub = Hub(map_config.start_hub,
+                                  map_config.metadata[map_config.start_hub[0]])
+        self.end_hub: Hub = Hub(map_config.end_hub,
+                                map_config.metadata[map_config.end_hub[0]])
+        self.hubs: dict[str, Hub] = {}
         for hub in map_config.hub:
             self.hubs[hub[0]] = Hub(hub, map_config.metadata[hub[0]])
         self.hubs.update({self.start_hub.name: self.start_hub,
                           self.end_hub.name: self.end_hub})
-        self.connections = []
+        self.connections: list[Connection] = []
         for connection in map_config.connection:
             self.connections.append(Connection((self.hubs[connection[0]],
                                                 self.hubs[connection[1]]),
@@ -26,25 +26,28 @@ class Graph:
                                                     0] + '-' + connection[1]]))
             self.hubs[connection[0]].setup_connection(self.connections[-1])
             self.hubs[connection[1]].setup_connection(self.connections[-1])
-        self.drones = []
+        self.drones: list[Drone] = []
         for id in range(map_config.nb_drones):
             drone = Drone(id + 1, self.start_hub)
             self.drones.append(drone)
             self.start_hub.drones[id + 1] = drone
-        self.turns = 0
-        self.tracks = {drone.id: [] for drone in self.drones}
-        self.capacity = [{place.name: f"{len(place.drones)}/{place.max_drones}"
-                          for place in list(self.hubs.values())}]
+        self.turns: int = 0
+        self.tracks: dict[int, list[str]] = {drone.id: [] for drone in
+                                             self.drones}
+        self.capacity: dict[str, str] = [{place.name: f"{len(place.drones)}"
+                                          f"/{place.max_drones}" for
+                                          place in list(self.hubs.values())}]
 
     def _set_pathfinder(self):
-        self.pathfinder = Pathfinder(self.start_hub, self.end_hub, self.hubs,
-                                     self.connections)
+        self.pathfinder: Pathfinder = Pathfinder(self.start_hub,
+                                                 self.end_hub, self.hubs,
+                                                 self.connections)
 
     def _set_drones_path(self):
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_path(drone.place, []))
+            drone.set_path(self.pathfinder.find_shortest_path(drone.place, {}))
 
-    def run_simulation(self):
+    def run_simulation(self) -> None:
         self._set_pathfinder()
         self._set_drones_path()
         while len(self.end_hub.drones) < len(self.drones):

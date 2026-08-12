@@ -5,18 +5,18 @@ from ..view.PygameView import PygameView
 
 class Controller:
     def __init__(self, map_config_file: str):
-        self.map_config_file = map_config_file
+        self.map_config_file: str = map_config_file
 
-    def __set_config(self):
-        self.__map_config = MapConfig.parse(self.map_config_file)
+    def __set_config(self) -> None:
+        self.__map_config: MapConfig = MapConfig.parse(self.map_config_file)
 
-    def __set_graph(self):
-        self.__graph = Graph(self.__map_config)
+    def __set_graph(self) -> None:
+        self.__graph: Graph = Graph(self.__map_config)
 
-    def __set_view(self):
-        self.__view = PygameView(self.__graph)
+    def __set_view(self) -> None:
+        self.__view: PygameView = PygameView(self.__graph)
 
-    def run(self):
+    def run(self) -> None:
         self.__set_config()
         self.__set_graph()
         self.__set_view()

@@ -7,13 +7,12 @@ if TYPE_CHECKING:
 
 class Drone:
     def __init__(self, d_id: int, start_hub: Hub) -> None:
-        self.id = d_id
+        self.id: int = d_id
         self.place: Place = start_hub
-        self.path = None
-        self.previous_place = None
+        self.previous_place: Place | None | Hub = None
 
     def set_path(self, path: list[Hub]) -> None:
-        self.path = path
+        self.path: list[Hub] = path
 
     def move(self) -> str:
         previous_place = (
@@ -34,12 +33,11 @@ class Drone:
                 else self.place.hubs[0].name
             )
         else:
-            try:
-                self.path[0].type
-            except AttributeError:
+            next_hub_type = getattr(self.path[0], "type", None)
+            if next_hub_type is None:
                 return f"D{self.id}-" + self.path[0].name
             else:
-                if self.path[0].type == "restricted":
+                if next_hub_type == "restricted":
                     return (
                         f"D{self.id}-"
                         + self.place.name

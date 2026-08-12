@@ -2,16 +2,18 @@ import pygame
 
 
 class DroneSprite(pygame.sprite.Sprite):
-    def __init__(self, id, color, width, height):
+    def __init__(self, id: int, color: tuple[int, int, int], width: int,
+                 height: int) -> None:
         pygame.sprite.Sprite.__init__(self)
-        self.width = width
-        self.height = height
-        self.image = pygame.Surface([width, height])
+        self.width: int = width
+        self.height: int = height
+        self.image: pygame.Surface = pygame.Surface([width, height])
         self.image.fill(color)
-        self.square = self.image.get_rect()
-        self.id = id
+        self.square: pygame.Rect = self.image.get_rect()
+        self.id: int = id
 
-    def draw(self, coordinates, screen, font):
+    def draw(self, coordinates: tuple[int, int],
+             screen: pygame.surface.Surface, font: pygame.font.Font) -> None:
         self.square.center = coordinates
         screen.blit(self.image, self.square)
         number = font.render(str(self.id), True, "white")

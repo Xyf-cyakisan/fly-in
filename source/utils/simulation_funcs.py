@@ -8,12 +8,11 @@ if TYPE_CHECKING:
 def get_path_len(path: list[Hub]) -> int:
     counter = 0
     for hub in path:
-        try:
-            hub.type
-        except AttributeError:
+        hub_type = getattr(hub, "type", None)
+        if hub_type is None:
             counter += 1
         else:
-            if hub.type == "restricted":
+            if hub_type == "restricted":
                 counter += 2
             else:
                 counter += 1
