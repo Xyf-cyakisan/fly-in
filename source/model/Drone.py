@@ -1,17 +1,18 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from .Hub import Hub
     from .Place import Place
 
 
 class Drone:
-    def __init__(self, d_id, start_hub):
+    def __init__(self, d_id: int, start_hub: Hub) -> None:
         self.id = d_id
         self.place: Place = start_hub
         self.path = None
         self.previous_place = None
 
-    def set_path(self, path):
+    def set_path(self, path: list[Hub]) -> None:
         self.path = path
 
     def move(self) -> str:
@@ -24,8 +25,9 @@ class Drone:
         self.previous_place = previous_place
         return movement
 
-    def _get_move(self):
-        if self.place.place_type == "connection":
+    def _get_move(self) -> str:
+        from ..model.Connection import Connection
+        if isinstance(self.place, Connection):
             return (
                 f"D{self.id}-" + self.place.hubs[1].name
                 if self.path[0].name == self.place.hubs[1].name

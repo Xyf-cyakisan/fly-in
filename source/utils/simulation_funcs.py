@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from ..model.Hub import Hub
 
 
-def get_path_len(path: list[Hub]):
+def get_path_len(path: list[Hub]) -> int:
     counter = 0
     for hub in path:
         try:
@@ -20,7 +20,7 @@ def get_path_len(path: list[Hub]):
     return counter
 
 
-def check_restricted_connections(restricted_hub: Hub):
+def check_restricted_connections(restricted_hub: Hub) -> int:
     counter = 0
     for connection in restricted_hub.connections:
         counter += sum(

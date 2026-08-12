@@ -189,7 +189,7 @@ class MapConfig:
         return dict_metadata
 
     @staticmethod
-    def _check_hub_names(dict_content) -> None:
+    def _check_hub_names(dict_content: dict[str, Any]) -> None:
         names = []
         if "-" in dict_content["start_hub"][0]:
             raise ValueError(
@@ -239,7 +239,7 @@ class MapConfig:
                 )
 
     @staticmethod
-    def _check_connections_duplicate(dict_content) -> None:
+    def _check_connections_duplicate(dict_content: dict[str, Any]) -> None:
         for i, connection_to_check in enumerate(dict_content["connection"]):
             for y, connection in enumerate(dict_content["connection"]):
                 if i != y and set(connection) == set(connection_to_check):
@@ -252,7 +252,7 @@ class MapConfig:
                     )
 
     @classmethod
-    def _all_data_types_covered(cls, dict_content) -> None:
+    def _all_data_types_covered(cls, dict_content: dict[str, Any]) -> None:
         values_to_pass: dict[str, bool] = {
             "nb_drones": False,
             "start_hub": False,
@@ -263,7 +263,7 @@ class MapConfig:
         for key in cls.POSSIBLE_VALUES:
             if dict_content.get(key, None):
                 values_to_pass[key] = True
-        not_passed: list[bool] = [
+        not_passed = [
             key
             for key in values_to_pass.keys()
             if values_to_pass[key] is False
@@ -278,7 +278,9 @@ class MapConfig:
             dict_content["end_hub"] = dict_content["end_hub"].pop()
 
     @staticmethod
-    def _convert_nb_drones_value_type(dict_content) -> dict:
+    def _convert_nb_drones_value_type(
+        dict_content: dict[str, Any]
+    ) -> dict[str, Any]:
         try:
             dict_content["nb_drones"] = int(dict_content["nb_drones"])
             if dict_content["nb_drones"] <= 0:
@@ -291,7 +293,9 @@ class MapConfig:
         return dict_content
 
     @staticmethod
-    def _convert_hubs_value_type(dict_content) -> dict:
+    def _convert_hubs_value_type(
+        dict_content: dict[str, Any]
+    ) -> dict[str, Any]:
         try:
             dict_content["start_hub"][1] = int(dict_content["start_hub"][1])
             dict_content["start_hub"][2] = int(dict_content["start_hub"][2])
@@ -326,7 +330,9 @@ class MapConfig:
         return dict_content
 
     @staticmethod
-    def _convert_connections_value_type(dict_content) -> dict:
+    def _convert_connections_value_type(
+        dict_content: dict[str, Any]
+    ) -> dict[str, Any]:
         for i in range(len(dict_content["connection"])):
             dict_content["connection"][i] = tuple(
                 dict_content["connection"][i]
@@ -337,7 +343,7 @@ class MapConfig:
     def _convert_content_to_dict(
         cls, content: list[str], lines: list[str]
     ) -> dict[str, Any]:
-        dict_content = {
+        dict_content: dict[str, Any] = {
             "nb_drones": None,
             "start_hub": [],
             "end_hub": [],
@@ -351,15 +357,15 @@ class MapConfig:
                 "Error: first non-commentary and non-empty line must "
                 "be nb_drones."
             )
-        for i, line in zip(lines, content):
-            if line.count(":") == 0:
+        for i, str_line in zip(lines, content):
+            if str_line.count(":") == 0:
                 raise ValueError(
                     f"Error (line {i}): syntax is <value_type>: "
                     "<value> (depends on value_type) [metadata] "
                     "(depends on value_type)"
                 )
             else:
-                line = line.split(":")
+                line = str_line.split(":")
                 line[0].strip(" ")
                 if len(line) != 2 or line[0] not in cls.POSSIBLE_VALUES:
                     raise ValueError(
@@ -403,6 +409,7 @@ class MapConfig:
                         )
         return dict_content
 
+    @staticmethod
     def _check_metadata_type(dict_content: dict[str, Any]) -> None:
         if isinstance(
             dict_content["metadata"][dict_content["start_hub"][0]], dict
@@ -528,6 +535,7 @@ class MapConfig:
                     connection[0] + "-" + connection[1]] = (
                         {"max_link_capacity": 1})
 
+    @staticmethod
     def _check_coordinates_duplicate(dict_content: dict[str, Any]
                                      ) -> dict[str, Any]:
         if (
@@ -535,9 +543,10 @@ class MapConfig:
             and dict_content["start_hub"][2] == dict_content["end_hub"][2]
         ):
             raise ValueError(
-                f"Error (line {dict_content.lines[dict_content['end_hub'][0]]}"
-                "): '{dict_content['end_hub'][0]}' is set at the same"
-                " coordinates as '{dict_content['start_hub'][0]}'"
+                "Error (line :"
+                f"{dict_content['lines'][dict_content['end_hub'][0]]}"
+                f"): '{dict_content['end_hub'][0]}' is set at the same"
+                f" coordinates as '{dict_content['start_hub'][0]}'"
             )
         for hub_to_check in dict_content["hub"]:
             if (
@@ -545,7 +554,7 @@ class MapConfig:
                 and hub_to_check[2] == dict_content["start_hub"][2]
             ):
                 raise ValueError(
-                    f"Error (line {dict_content.lines[hub_to_check[0]]}): "
+                    f"Error (line {dict_content['lines'][hub_to_check[0]]}): "
                     f"'{hub_to_check[0]}' is set at the same coordinates as "
                     f"'{dict_content['start_hub'][0]}'"
                 )
@@ -554,7 +563,7 @@ class MapConfig:
                 and hub_to_check[2] == dict_content["end_hub"][2]
             ):
                 raise ValueError(
-                    f"Error (line {dict_content.lines[hub_to_check[0]]}): "
+                    f"Error (line {dict_content['lines'][hub_to_check[0]]}): "
                     f"'{hub_to_check[0]}' is set at the same coordinates as "
                     f"'{dict_content['end_hub'][0]}'"
                 )
@@ -565,13 +574,15 @@ class MapConfig:
                     and hub[0] != hub_to_check[0]
                 ):
                     raise ValueError(
-                        f"Error (line {dict_content.lines[hub[0]]}): "
+                        f"Error (line {dict_content['lines'][hub[0]]}): "
                         f"'{hub[0]}' is set at the same coordinates as "
                         f"'{hub_to_check[0]}'"
                     )
         return dict_content
 
-    def _get_connection_for_hub(dict_content, hub_name, linked):
+    @staticmethod
+    def _get_connection_for_hub(dict_content: dict[str, Any], hub_name: str,
+                                linked: set[str]) -> list[str]:
         connected = []
         for connection in dict_content["connection"]:
             if hub_name in connection:
@@ -596,7 +607,7 @@ class MapConfig:
         return connected
 
     @classmethod
-    def _check_if_possible_map(cls, dict_content) -> None:
+    def _check_if_possible_map(cls, dict_content: dict[str, Any]) -> None:
         queue = [dict_content["start_hub"][0]]
         linked = set(dict_content["start_hub"][0])
         while queue:

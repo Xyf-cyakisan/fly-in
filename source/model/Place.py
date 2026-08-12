@@ -3,6 +3,9 @@ from ..model.Drone import Drone
 
 
 class Place(Protocol):
+    place_type: str
+    name: str
+
     def drone_arrival(self, drone: Drone) -> None:
         ...
 
