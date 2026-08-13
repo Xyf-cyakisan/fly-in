@@ -18,7 +18,7 @@ except ImportError:
 
 class PygameView:
 
-    COLORS: dict[str, str | tuple[int, int, int]] = {
+    __COLORS: dict[str, str | tuple[int, int, int]] = {
         "default": "white",
         "black": (0, 0, 0),
         "darkgrey": (40, 40, 45),
@@ -41,20 +41,19 @@ class PygameView:
         "grey": (192, 192, 192),
     }
 
-    def __init__(self, nb_drones: int, start_hub: Hub, end_hub: Hub,
+    def __init__(self, nb_drones: int, start_hub: Hub,
                  hubs: dict[str, Hub], connections: list[Connection],
                  tracks: dict[int, list[tuple[str, str] | str]],
                  capacity: list[dict[str, str]]
                  ) -> None:
-        self.nb_drones: int = nb_drones
-        self.start_hub: Hub = start_hub
-        self.end_hub: Hub = end_hub
-        self.hubs: dict[str, Hub] = hubs
-        self.connections: list[Connection] = connections
-        self.tracks: dict[int, list[tuple[str, str] | str]] = tracks
-        self.capacity: list[dict[str, str]] = capacity
-        self.current_turn: int = -1
-        self.actual_turn: int = 0
+        self.__nb_drones: int = nb_drones
+        self.__start_hub: Hub = start_hub
+        self.__hubs: dict[str, Hub] = hubs
+        self.__connections: list[Connection] = connections
+        self.__tracks: dict[int, list[tuple[str, str] | str]] = tracks
+        self.__capacity: list[dict[str, str]] = capacity
+        self.__current_turn: int = -1
+        self.__actual_turn: int = 0
 
     def _draw_circle(
         self,
@@ -69,54 +68,54 @@ class PygameView:
             "blocked": "brown",
         }
         around = hub_type_color[hub_type]
-        pygame.draw.circle(self.screen, around, coords, 35)
-        pygame.draw.circle(self.screen, color, coords, 30)
+        pygame.draw.circle(self.__screen, around, coords, 35)
+        pygame.draw.circle(self.__screen, color, coords, 30)
 
     def _draw_connections(self) -> None:
-        for connection in self.connections:
+        for connection in self.__connections:
             pygame.draw.line(
-                self.screen,
-                self.COLORS["grey"],
-                self.coords[connection.hubs[0].name],
-                self.coords[connection.hubs[1].name],
+                self.__screen,
+                self.__COLORS["grey"],
+                self.__coords[connection.hubs[0].name],
+                self.__coords[connection.hubs[1].name],
                 20,
             )
 
     def _draw_hubs(self) -> None:
-        for hub in self.hubs.values():
+        for hub in self.__hubs.values():
             hub_type = getattr(hub, "type", None)
             if hub_type is None:
                 hub_type = "normal"
             self._draw_circle(
-                self.COLORS[getattr(hub, "color", "default")],
-                self.coords[hub.name],
+                self.__COLORS[getattr(hub, "color", "default")],
+                self.__coords[hub.name],
                 hub_type,
             )
 
     def _print_names(self) -> None:
-        for hub in self.hubs.values():
-            text = self.font.render(hub.name, True, "white", "black")
-            coords = self.coords[hub.name]
+        for hub in self.__hubs.values():
+            text = self.__font.render(hub.name, True, "white", "black")
+            coords = self.__coords[hub.name]
             coords = (coords[0] - 35, coords[1] + 45)
-            self.screen.blit(text, coords)
+            self.__screen.blit(text, coords)
 
     def _set_distance_between_hubs(self) -> dict[str, dict[int, float]]:
         min_v = {}
         min_v["x"] = min(
-            [hub.coordinates[0] for hub in self.hubs.values()]
+            [hub.coordinates[0] for hub in self.__hubs.values()]
         )
         min_v["y"] = min(
-            [hub.coordinates[1] for hub in self.hubs.values()]
+            [hub.coordinates[1] for hub in self.__hubs.values()]
         )
         max_v = {}
         max_v["x"] = max(
-            [hub.coordinates[0] for hub in self.hubs.values()]
+            [hub.coordinates[0] for hub in self.__hubs.values()]
         )
         max_v["y"] = max(
-            [hub.coordinates[1] for hub in self.hubs.values()]
+            [hub.coordinates[1] for hub in self.__hubs.values()]
         )
-        covered_by_map_x = self.screen_x * 0.85
-        covered_by_map_y = self.screen_y * 0.90
+        covered_by_map_x = self.__screen_x * 0.85
+        covered_by_map_y = self.__screen_y * 0.90
         distance_between = {
             "x": (
                 (covered_by_map_x - 35) // abs(max_v["x"] - min_v["x"])
@@ -132,46 +131,46 @@ class PygameView:
         converted_coordinates: dict[str, dict[int, float]] = {"x": {}, "y": {}}
         counter = 0
         if distance_between["y"] == 0:
-            converted_coordinates["y"][min_v["y"]] = self.screen_y // 2
+            converted_coordinates["y"][min_v["y"]] = self.__screen_y // 2
         else:
             for coord in range(min_v["y"], max_v["y"] + 1):
                 converted_coordinates["y"][coord] = (
-                    distance_between["y"] * counter + self.screen_y * 0.05
+                    distance_between["y"] * counter + self.__screen_y * 0.05
                     if counter != 0
-                    else self.screen_y * 0.05
+                    else self.__screen_y * 0.05
                 )
                 counter += 1
             counter = 0
         if distance_between["x"] == 0:
-            converted_coordinates["x"][min_v["y"]] = self.screen_x // 2
+            converted_coordinates["x"][min_v["y"]] = self.__screen_x // 2
         else:
             for coord in range(min_v["x"], max_v["x"] + 1):
                 converted_coordinates["x"][coord] = (
-                    distance_between["x"] * counter + self.screen_x * 0.075
+                    distance_between["x"] * counter + self.__screen_x * 0.075
                     if counter != 0
-                    else self.screen_x * 0.075
+                    else self.__screen_x * 0.075
                 )
                 counter += 1
         return converted_coordinates
 
     def _initialize_coords_dict(self) -> None:
         converted_coordinates = self._set_distance_between_hubs()
-        self.coords = {}
-        for hub in self.hubs.values():
-            self.coords[hub.name] = (
+        self.__coords = {}
+        for hub in self.__hubs.values():
+            self.__coords[hub.name] = (
                 converted_coordinates["x"][hub.coordinates[0]],
                 converted_coordinates["y"][hub.coordinates[1]],
             )
-        for connection in self.connections:
-            self.coords[connection.name] = (
+        for connection in self.__connections:
+            self.__coords[connection.name] = (
                 (
-                    self.coords[connection.hubs[0].name][0]
-                    + self.coords[connection.hubs[1].name][0]
+                    self.__coords[connection.hubs[0].name][0]
+                    + self.__coords[connection.hubs[1].name][0]
                 )
                 / 2,
                 (
-                    self.coords[connection.hubs[0].name][1]
-                    + self.coords[connection.hubs[1].name][1]
+                    self.__coords[connection.hubs[0].name][1]
+                    + self.__coords[connection.hubs[1].name][1]
                 )
                 / 2,
             )
@@ -179,68 +178,68 @@ class PygameView:
     def _initialize_pygame(self) -> None:
         pygame.init()
         pygame.font.init()
-        self.screen_x, self.screen_y = (
+        self.__screen_x, self.__screen_y = (
             pygame.display.Info().current_w,
             pygame.display.Info().current_h,
         )
         pygame.display.set_icon(
             pygame.image.load("source/assets/fly-in_icone." "png")
         )
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        self.clock = pygame.time.Clock()
+        self.__screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.__clock = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
-        self.screen.fill(self.COLORS["darkgrey"])
-        self.font = pygame.font.Font(None, 25)
+        self.__screen.fill(self.__COLORS["darkgrey"])
+        self.__font = pygame.font.Font(None, 25)
 
     def _initialize_drones(self) -> None:
-        self.drones = [
+        self.__drones = [
             DroneSprite(id, "blue", 25, 25)
-            for id in range(1, self.nb_drones + 1)
+            for id in range(1, self.__nb_drones + 1)
         ]
-        for drone in self.drones:
+        for drone in self.__drones:
             drone.draw(
-                self.coords[self.start_hub.name],
-                self.screen,
-                self.font,
+                self.__coords[self.__start_hub.name],
+                self.__screen,
+                self.__font,
             )
 
     def _print_places_capacity(self, current_turn: int) -> None:
-        for place_name, place_capacity in self.capacity[
+        for place_name, place_capacity in self.__capacity[
             current_turn
         ].items():
-            text = self.font.render(place_capacity, True, "white", "black")
-            self.screen.blit(
+            text = self.__font.render(place_capacity, True, "white", "black")
+            self.__screen.blit(
                 text,
                 (
-                    self.coords[place_name][0] - 17.5,
-                    self.coords[place_name][1] - 60,
+                    self.__coords[place_name][0] - 17.5,
+                    self.__coords[place_name][1] - 60,
                 ),
             )
 
     def _print_next_turn(self) -> None:
-        if self.actual_turn != len(self.tracks[1]):
-            self.screen.fill(self.COLORS["darkgrey"])
+        if self.__actual_turn != len(self.__tracks[1]):
+            self.__screen.fill(self.__COLORS["darkgrey"])
             self._reset_map()
-            self.current_turn += 1
-            self.actual_turn += 1
-            for i, drone in enumerate(self.drones):
-                self.drones[i].draw(
-                    self.coords[
-                        self.tracks[drone.id][self.current_turn][1]
+            self.__current_turn += 1
+            self.__actual_turn += 1
+            for i, drone in enumerate(self.__drones):
+                self.__drones[i].draw(
+                    self.__coords[
+                        self.__tracks[drone.id][self.__current_turn][1]
                     ],
-                    self.screen,
-                    self.font,
+                    self.__screen,
+                    self.__font,
                 )
-            self._print_places_capacity(self.actual_turn)
+            self._print_places_capacity(self.__actual_turn)
             self._print_turn_number()
-            print(f"Turn {self.current_turn + 1}: ", end="")
-            for drone in self.drones:
+            print(f"Turn {self.__current_turn + 1}: ", end="")
+            for drone in self.__drones:
                 print(
-                    self.tracks[drone.id][self.current_turn][0],
+                    self.__tracks[drone.id][self.__current_turn][0],
                     end=(
                         " "
-                        if self.tracks[drone.id][
-                            self.current_turn
+                        if self.__tracks[drone.id][
+                            self.__current_turn
                         ][0]
                         != ""
                         else ""
@@ -255,19 +254,19 @@ class PygameView:
         self._print_names()
 
     def _print_turn_number(self) -> None:
-        text = self.font.render(
-            "Turn: " + str(self.actual_turn), True, "white", "black"
+        text = self.__font.render(
+            "Turn: " + str(self.__actual_turn), True, "white", "black"
         )
-        self.screen.blit(text, (0, 0))
+        self.__screen.blit(text, (0, 0))
 
     def _reset_whole_visual(self) -> None:
-        self.actual_turn = 0
-        self.current_turn = -1
-        self.screen.fill(self.COLORS["darkgrey"])
+        self.__actual_turn = 0
+        self.__current_turn = -1
+        self.__screen.fill(self.__COLORS["darkgrey"])
         self._reset_map()
         self._initialize_drones()
         self._print_turn_number()
-        self._print_places_capacity(self.actual_turn)
+        self._print_places_capacity(self.__actual_turn)
         pygame.display.flip()
 
     def display_simulation(self) -> None:
@@ -276,11 +275,11 @@ class PygameView:
         self._reset_map()
         self._initialize_drones()
         self._print_turn_number()
-        self._print_places_capacity(self.actual_turn)
+        self._print_places_capacity(self.__actual_turn)
         pygame.display.flip()
         running = True
         while running:
-            self.clock.tick(60)
+            self.__clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:

@@ -16,7 +16,6 @@ class Controller:
     def __set_view(self) -> None:
         self.__view: PygameView = PygameView(len(self.__simulation.drones),
                                              self.__simulation.start_hub,
-                                             self.__simulation.end_hub,
                                              self.__simulation.hubs,
                                              self.__simulation.connections,
                                              self.__simulation.tracks,
