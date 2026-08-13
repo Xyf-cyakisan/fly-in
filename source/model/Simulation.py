@@ -50,6 +50,49 @@ class Simulation:
             drone.set_path(self.pathfinder.find_shortest_path(self.start_hub,
                                                               set()))
 
+    def _switch_path_trial_and_error(self, drone: Drone) -> None:
+        original_path = drone.path
+        to_avoid = {drone.path[0]}
+        if drone.previous_place is not None:
+            to_avoid.add(drone.previous_place)
+        if isinstance(drone.place, Hub):
+            path = self.pathfinder.find_shortest_path(
+                drone.place, to_avoid)
+        if path != []:
+            if (get_path_len(path) <=
+               get_path_len(original_path) + 1):
+                drone.set_path(path)
+            else:
+                to_avoid.add(path[0])
+        if path == []:
+            drone.set_path(original_path)
+            self.tracks[drone.id].append(("", drone.place.name)
+                                         )
+        else:
+            while True:
+                try:
+                    move = drone.move()
+                    self.tracks[drone.id].append(
+                        (move, drone.place.name))
+                except MovementError:
+                    to_avoid.add(drone.path[0])
+                    if isinstance(drone.place, Hub):
+                        path = (
+                            self.pathfinder.find_shortest_path(
+                                drone.place, to_avoid))
+                    if path == []:
+                        drone.set_path(original_path)
+                        self.tracks[drone.id].append(
+                            ("", drone.place.name))
+                        break
+                    if (get_path_len(path)
+                       <= get_path_len(original_path) + 1):
+                        drone.set_path(path)
+                    else:
+                        to_avoid.add(path[0])
+                else:
+                    break
+
     def run_simulation(self) -> None:
         self._set_pathfinder()
         self._set_drones_path()
@@ -63,47 +106,7 @@ class Simulation:
                         move = drone.move()
                         self.tracks[drone.id].append((move, drone.place.name))
                     except MovementError:
-                        original_path = drone.path
-                        to_avoid = {drone.path[0]}
-                        if drone.previous_place is not None:
-                            to_avoid.add(drone.previous_place)
-                        if isinstance(drone.place, Hub):
-                            path = self.pathfinder.find_shortest_path(
-                                drone.place, to_avoid)
-                        if path != []:
-                            if (get_path_len(path) <=
-                               get_path_len(original_path) + 1):
-                                drone.set_path(path)
-                            else:
-                                to_avoid.add(path[0])
-                        if path == []:
-                            drone.set_path(original_path)
-                            self.tracks[drone.id].append(("", drone.place.name)
-                                                         )
-                        else:
-                            while True:
-                                try:
-                                    move = drone.move()
-                                    self.tracks[drone.id].append(
-                                        (move, drone.place.name))
-                                except MovementError:
-                                    to_avoid.add(drone.path[0])
-                                    if isinstance(drone.place, Hub):
-                                        path = (
-                                            self.pathfinder.find_shortest_path(
-                                                drone.place, to_avoid))
-                                    if path == []:
-                                        drone.set_path(original_path)
-                                        self.tracks[drone.id].append(
-                                            ("", drone.place.name))
-                                        break
-                                    if (get_path_len(path)
-                                       <= get_path_len(original_path) + 1):
-                                        drone.set_path(path)
-                                    else:
-                                        to_avoid.add(path[0])
-                                else:
-                                    break
+                        self._switch_path_trial_and_error(drone)
             self.capacity.append(
                 {place.name: f"{len(place.drones)}/{getattr(place,
                                                             "max_drones", 1)}"

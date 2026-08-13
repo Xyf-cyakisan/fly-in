@@ -1,6 +1,6 @@
 import os
-
-from ..model.Simulation import Simulation
+from ..model.Hub import Hub
+from ..model.Connection import Connection
 from .models import DroneSprite
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
@@ -41,8 +41,18 @@ class PygameView:
         "grey": (192, 192, 192),
     }
 
-    def __init__(self, simulation: Simulation) -> None:
-        self._simulation: Simulation = simulation
+    def __init__(self, nb_drones: int, start_hub: Hub, end_hub: Hub,
+                 hubs: dict[str, Hub], connections: list[Connection],
+                 tracks: dict[int, list[tuple[str, str] | str]],
+                 capacity: list[dict[str, str]]
+                 ) -> None:
+        self.nb_drones: int = nb_drones
+        self.start_hub: Hub = start_hub
+        self.end_hub: Hub = end_hub
+        self.hubs: dict[str, Hub] = hubs
+        self.connections: list[Connection] = connections
+        self.tracks: dict[int, list[tuple[str, str] | str]] = tracks
+        self.capacity: list[dict[str, str]] = capacity
         self.current_turn: int = -1
         self.actual_turn: int = 0
 
@@ -63,7 +73,7 @@ class PygameView:
         pygame.draw.circle(self.screen, color, coords, 30)
 
     def _draw_connections(self) -> None:
-        for connection in self._simulation.connections:
+        for connection in self.connections:
             pygame.draw.line(
                 self.screen,
                 self.COLORS["grey"],
@@ -73,7 +83,7 @@ class PygameView:
             )
 
     def _draw_hubs(self) -> None:
-        for hub in self._simulation.hubs.values():
+        for hub in self.hubs.values():
             hub_type = getattr(hub, "type", None)
             if hub_type is None:
                 hub_type = "normal"
@@ -84,7 +94,7 @@ class PygameView:
             )
 
     def _print_names(self) -> None:
-        for hub in self._simulation.hubs.values():
+        for hub in self.hubs.values():
             text = self.font.render(hub.name, True, "white", "black")
             coords = self.coords[hub.name]
             coords = (coords[0] - 35, coords[1] + 45)
@@ -93,17 +103,17 @@ class PygameView:
     def _set_distance_between_hubs(self) -> dict[str, dict[int, float]]:
         min_v = {}
         min_v["x"] = min(
-            [hub.coordinates[0] for hub in self._simulation.hubs.values()]
+            [hub.coordinates[0] for hub in self.hubs.values()]
         )
         min_v["y"] = min(
-            [hub.coordinates[1] for hub in self._simulation.hubs.values()]
+            [hub.coordinates[1] for hub in self.hubs.values()]
         )
         max_v = {}
         max_v["x"] = max(
-            [hub.coordinates[0] for hub in self._simulation.hubs.values()]
+            [hub.coordinates[0] for hub in self.hubs.values()]
         )
         max_v["y"] = max(
-            [hub.coordinates[1] for hub in self._simulation.hubs.values()]
+            [hub.coordinates[1] for hub in self.hubs.values()]
         )
         covered_by_map_x = self.screen_x * 0.85
         covered_by_map_y = self.screen_y * 0.90
@@ -147,12 +157,12 @@ class PygameView:
     def _initialize_coords_dict(self) -> None:
         converted_coordinates = self._set_distance_between_hubs()
         self.coords = {}
-        for hub in self._simulation.hubs.values():
+        for hub in self.hubs.values():
             self.coords[hub.name] = (
                 converted_coordinates["x"][hub.coordinates[0]],
                 converted_coordinates["y"][hub.coordinates[1]],
             )
-        for connection in self._simulation.connections:
+        for connection in self.connections:
             self.coords[connection.name] = (
                 (
                     self.coords[connection.hubs[0].name][0]
@@ -184,18 +194,18 @@ class PygameView:
 
     def _initialize_drones(self) -> None:
         self.drones = [
-            DroneSprite(drone.id, "blue", 25, 25)
-            for drone in self._simulation.drones
+            DroneSprite(id, "blue", 25, 25)
+            for id in range(1, self.nb_drones + 1)
         ]
         for drone in self.drones:
             drone.draw(
-                self.coords[self._simulation.start_hub.name],
+                self.coords[self.start_hub.name],
                 self.screen,
                 self.font,
             )
 
     def _print_places_capacity(self, current_turn: int) -> None:
-        for place_name, place_capacity in self._simulation.capacity[
+        for place_name, place_capacity in self.capacity[
             current_turn
         ].items():
             text = self.font.render(place_capacity, True, "white", "black")
@@ -208,15 +218,15 @@ class PygameView:
             )
 
     def _print_next_turn(self) -> None:
-        if self.actual_turn != len(self._simulation.tracks[1]):
+        if self.actual_turn != len(self.tracks[1]):
             self.screen.fill(self.COLORS["darkgrey"])
             self._reset_map()
             self.current_turn += 1
             self.actual_turn += 1
-            for i, drone in enumerate(self._simulation.drones):
+            for i, drone in enumerate(self.drones):
                 self.drones[i].draw(
                     self.coords[
-                        self._simulation.tracks[drone.id][self.current_turn][1]
+                        self.tracks[drone.id][self.current_turn][1]
                     ],
                     self.screen,
                     self.font,
@@ -224,12 +234,12 @@ class PygameView:
             self._print_places_capacity(self.actual_turn)
             self._print_turn_number()
             print(f"Turn {self.current_turn + 1}: ", end="")
-            for drone in self._simulation.drones:
+            for drone in self.drones:
                 print(
-                    self._simulation.tracks[drone.id][self.current_turn][0],
+                    self.tracks[drone.id][self.current_turn][0],
                     end=(
                         " "
-                        if self._simulation.tracks[drone.id][
+                        if self.tracks[drone.id][
                             self.current_turn
                         ][0]
                         != ""
