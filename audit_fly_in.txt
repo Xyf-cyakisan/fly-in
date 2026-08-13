@@ -1,0 +1,52 @@
+Fly-in subject compliance audit
+================================
+
+Verdict
+-------
+Not fully compliant yet.
+
+Confirmed positives
+-------------------
+- The project is written in Python 3.10+ and uses type hints.
+- `make lint-strict` passes.
+- The simulation runs successfully on all provided maps.
+- The recorded tracks are formatted correctly for all provided maps.
+- Performance targets from the subject are met on the provided benchmark maps, including the challenger map.
+- The project has a graphical representation through `source/view/PygameView.py`.
+- A `.gitignore` file is present.
+
+Blocking issue
+--------------
+- There is no `README.md` at the repository root.
+  The subject requires a root README with:
+  - an italicized first line matching the required 42 curriculum sentence,
+  - a Description section,
+  - an Instructions section,
+  - a Resources section,
+  - algorithm and implementation details,
+  - visual representation documentation,
+  - an example input and expected output.
+
+Points to watch
+---------------
+- The subject says the project must be completely object-oriented.
+  The codebase still contains free helper functions in `source/utils/simulation_funcs.py` and a script-style entry point in `fly-in.py`.
+  This may be accepted in practice, but if the evaluation is strict, it is a compliance risk.
+- `fly-in_tests.py` is empty, which is not a mandatory failure, but the subject recommends test programs.
+
+Detailed notes
+--------------
+- Parser / validation: implemented in `source/parser/MapConfig.py`.
+- Simulation / routing: implemented in `source/model/Simulation.py`.
+- Pathfinding: implemented in `source/model/Pathfinder.py`.
+- Visual feedback: implemented in `source/view/PygameView.py`.
+- Subject benchmarks checked on provided maps:
+  - easy maps: passed
+  - medium maps: passed
+  - hard maps: passed
+  - challenger map: passed with 43 turns, under the 45-turn reference
+
+Final conclusion
+----------------
+If the goal is to be safe for peer review, the project is close but not fully compliant because the required root README is missing.
+If the README is added and the OOP requirement is accepted as-is, the rest of the checked subject points look good on the provided maps.
