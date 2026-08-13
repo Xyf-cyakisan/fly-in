@@ -23,9 +23,10 @@ class Pathfinder:
         self.hubs: dict[str, Hub] = hubs
         self.connections: list[Connection] = connections
 
-    def find_shortest_path(self, og_position: Place, to_avoid: set[Place]
-                           ) -> list[Place]:
-        self._setup_graph_values()
+    def find_shortest_path(
+        self, og_position: Place, to_avoid: set[Place]
+    ) -> list[Place]:
+        self._setup_Simulation_values()
         fastest_paths: dict[str, tuple[float, list[Place]]] = {
             hub.name: (float("inf"), []) for hub in list(self.hubs.values())
         }
@@ -65,8 +66,9 @@ class Pathfinder:
                         )
         return fastest_paths[self.end_hub.name][1]
 
-    def _get_neighbors_of_hub(self, hub: Place, current_path: list[Place],
-                              to_avoid: set[Place]) -> list[Hub]:
+    def _get_neighbors_of_hub(
+        self, hub: Place, current_path: list[Place], to_avoid: set[Place]
+    ) -> list[Hub]:
         neighbors = []
         if isinstance(hub, Hub):
             for connection in hub.connections:
@@ -89,8 +91,9 @@ class Pathfinder:
                     return True
         return False
 
-    def _get_cheapest(self, queue: list[tuple[float, Place, list[Place]]]
-                      ) -> int:
+    def _get_cheapest(
+        self, queue: list[tuple[float, Place, list[Place]]]
+    ) -> int:
         if self.check_priority_in_path([hub[1] for hub in queue]):
             for _, hub, _ in queue:
                 hub_type = getattr(hub, "type", None)
@@ -106,7 +109,7 @@ class Pathfinder:
                 min([hub[0] for hub in queue])
             )
 
-    def _setup_graph_values(self) -> None:
+    def _setup_Simulation_values(self) -> None:
         self.values = {}
         for hub_name in self.hubs.keys():
             hub_type = getattr(self.hubs[hub_name], "type", None)

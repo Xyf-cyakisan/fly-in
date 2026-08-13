@@ -6,7 +6,7 @@ hub: here_we_go_again 1 0 [color=lightbrown max_drones=6]
 
 hub: long_way_home 0 1 [zone=priority color=cyan max_drones=3]
 hub: highway_to_hell 0 2 [zone=priority color=cyan max_drones=2]
-hub: telegraph_road 0 3 [zone=priority color=cyan max_drones=1]
+hub: teleSimulation_road 0 3 [zone=priority color=cyan max_drones=1]
 hub: restricted 1 1 [zone=restricted color=red max_drones=2]
 hub: normal_road_north 2 1 [color=lightblue max_drones=1]
 hub: normal_road_join 2 2 [color=lightblue max_drones=1]
@@ -74,8 +74,8 @@ connection: here_we_go_again-restricted[max_link_capacity=2]
 connection: here_we_go_again-normal_road_north
 connection: here_we_go_again-normal_road_south
 connection: long_way_home-highway_to_hell[max_link_capacity=2]
-connection: highway_to_hell-telegraph_road[max_link_capacity=2]
-connection: telegraph_road-the_gathering
+connection: highway_to_hell-teleSimulation_road[max_link_capacity=2]
+connection: teleSimulation_road-the_gathering
 connection: restricted-the_gathering[max_link_capacity=2]
 connection: normal_road_north-normal_road_join
 connection: normal_road_join-normal_road_south

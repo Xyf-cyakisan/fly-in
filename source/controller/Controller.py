@@ -1,4 +1,4 @@
-from ..model.Graph import Graph
+from ..model.Simulation import Simulation
 from ..parser.MapConfig import MapConfig
 from ..view.PygameView import PygameView
 
@@ -10,15 +10,15 @@ class Controller:
     def __set_config(self) -> None:
         self.__map_config: MapConfig = MapConfig.parse(self.map_config_file)
 
-    def __set_graph(self) -> None:
-        self.__graph: Graph = Graph(self.__map_config)
+    def __set_Simulation(self) -> None:
+        self.__simulation: Simulation = Simulation(self.__map_config)
 
     def __set_view(self) -> None:
-        self.__view: PygameView = PygameView(self.__graph)
+        self.__view: PygameView = PygameView(self.__simulation)
 
     def run(self) -> None:
         self.__set_config()
-        self.__set_graph()
+        self.__set_Simulation()
         self.__set_view()
-        self.__graph.run_simulation()
-        self.__view.display_graph()
+        self.__simulation.run_simulation()
+        self.__view.display_simulation()

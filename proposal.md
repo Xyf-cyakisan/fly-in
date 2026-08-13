@@ -4,7 +4,7 @@ Résumé
 ------
 Proposition d'une structure MVC simple, claire et orientée objets pour implémenter
 le simulateur de drones décrit dans le sujet. Respecte Python 3.10+, flake8, mypy,
-et l'interdiction d'utiliser des bibliothèques de graphes externes.
+et l'interdiction d'utiliser des bibliothèques de Simulationes externes.
 
 Arborescence proposée
 ---------------------
@@ -16,7 +16,7 @@ Arborescence proposée
   - model/
     - __init__.py
     - zone.py              # classes Zone, StartZone, EndZone, Connection
-    - graph.py             # classe Graph (gestion des noeuds/aretes, validation)
+    - Simulation.py             # classe Simulation (gestion des noeuds/aretes, validation)
     - drone.py             # classe Drone (id, state, path, position)
     - parser.py            # Parser strict du format d'entrée (lève erreurs avec ligne)
   - view/
@@ -31,7 +31,7 @@ Arborescence proposée
   - util/
     - types.py             # type aliases et petites fonctions utilitaires
     - exceptions.py        # exceptions personnalisées de parsing/simulation
-- tests/                   # pytest tests unitaires (parser, graph, scheduler)
+- tests/                   # pytest tests unitaires (parser, Simulation, scheduler)
 - Makefile
 - README.md
 - .gitignore
@@ -42,14 +42,14 @@ Rôles et responsabilités (par dossier)
 - src/model:
   - `Zone` : encapsule métadonnées (type, color, max_drones, coords). Méthodes
     pour coût de mouvement et validation (blocked -> inaccessible).
-  - `Connection` (dans graph.py ou séparé) : capacités de lien, identifiant,
+  - `Connection` (dans Simulation.py ou séparé) : capacités de lien, identifiant,
     état transitoire (combien d'entrants en vol).
-  - `Graph` : API de lecture/validation, indexation par nom, itérateurs, méthodes
+  - `Simulation` : API de lecture/validation, indexation par nom, itérateurs, méthodes
     pour voisins, capacités et clones immuables pour simulation.
   - `Drone` : suit l'ID, état (idle,moving,in_transit,delivered), chemin courante,
     historique de mouvements.
   - `Parser` : lecture ligne à ligne, validation stricte, erreurs détaillées
-    (ligne + message). Renvoie un objet `Graph` et `nb_drones`.
+    (ligne + message). Renvoie un objet `Simulation` et `nb_drones`.
 
 - src/controller:
   - `Pathfinder` : implémentation A* ou Dijkstra adaptée au coût par destination
@@ -93,7 +93,7 @@ Contraintes parser / robustesse
 Tests et qualité
 ---------------
 
-- `tests/` : cas unitaires pour parser (bon/mauvais fichiers), graph (capacités),
+- `tests/` : cas unitaires pour parser (bon/mauvais fichiers), Simulation (capacités),
   pathfinder (coûts), scheduler (scénarios simples). Utiliser `pytest`.
 - CI local : target `make lint` exécute `flake8 .` et `mypy . --warn-return-any ...`
 
