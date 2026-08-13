@@ -1,6 +1,5 @@
 from .Connection import Connection
 from .Hub import Hub
-from .Place import Place
 
 
 class Pathfinder:
@@ -24,13 +23,13 @@ class Pathfinder:
         self.connections: list[Connection] = connections
 
     def find_shortest_path(
-        self, og_position: Place, to_avoid: set[Place]
-    ) -> list[Place]:
+        self, og_position: Hub, to_avoid: set[Hub]
+    ) -> list[Hub]:
         self._setup_Simulation_values()
-        fastest_paths: dict[str, tuple[float, list[Place]]] = {
+        fastest_paths: dict[str, tuple[float, list[Hub]]] = {
             hub.name: (float("inf"), []) for hub in list(self.hubs.values())
         }
-        queue: list[tuple[float, Place, list[Place]]] = [(0, og_position, [])]
+        queue: list[tuple[float, Hub, list[Hub]]] = [(0, og_position, [])]
         current_path = []
         while queue:
             cheapest = self._get_cheapest(queue)
@@ -67,7 +66,7 @@ class Pathfinder:
         return fastest_paths[self.end_hub.name][1]
 
     def _get_neighbors_of_hub(
-        self, hub: Place, current_path: list[Place], to_avoid: set[Place]
+        self, hub: Hub, current_path: list[Hub], to_avoid: set[Hub]
     ) -> list[Hub]:
         neighbors = []
         if isinstance(hub, Hub):
@@ -81,7 +80,7 @@ class Pathfinder:
                     neighbors.append(neighbor)
         return neighbors
 
-    def check_priority_in_path(self, hubs: list[Place]) -> bool:
+    def check_priority_in_path(self, hubs: list[Hub]) -> bool:
         for hub in hubs:
             hub_type = getattr(hub, "type", None)
             if hub_type is None:
@@ -92,7 +91,7 @@ class Pathfinder:
         return False
 
     def _get_cheapest(
-        self, queue: list[tuple[float, Place, list[Place]]]
+        self, queue: list[tuple[float, Hub, list[Hub]]]
     ) -> int:
         if self.check_priority_in_path([hub[1] for hub in queue]):
             for _, hub, _ in queue:

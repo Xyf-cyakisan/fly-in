@@ -9,14 +9,15 @@ class Drone:
     def __init__(self, d_id: int, start_hub: Hub) -> None:
         self.id: int = d_id
         self.place: Place = start_hub
-        self.previous_place: Place | None | Hub = None
+        self.previous_place: None | Hub = None
 
-    def set_path(self, path: list[Place]) -> None:
-        self.path: list[Place] = path
+    def set_path(self, path: list[Hub]) -> None:
+        self.path: list[Hub] = path
 
     def move(self) -> str:
+        from .Hub import Hub
         previous_place = (
-            self.place if self.place.place_type != "connection"
+            self.place if isinstance(self.place, Hub)
             else self.previous_place
         )
         movement = self._get_move()

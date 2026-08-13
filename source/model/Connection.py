@@ -19,7 +19,6 @@ class Connection:
             "max_link_capacity") if max_link_capacity is not None else 1)
         self.drones: dict[int, Drone] = {}
         self.passed_through: int = 0
-        self.place_type: str = "connection"
 
     def _get_destination(self, drone_zone: Place) -> Place:
         if drone_zone.name == self.hubs[0].name:

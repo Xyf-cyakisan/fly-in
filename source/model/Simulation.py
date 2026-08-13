@@ -47,7 +47,7 @@ class Simulation:
 
     def _set_drones_path(self) -> None:
         for drone in self.drones:
-            drone.set_path(self.pathfinder.find_shortest_path(drone.place,
+            drone.set_path(self.pathfinder.find_shortest_path(self.start_hub,
                                                               set()))
 
     def run_simulation(self) -> None:
@@ -67,8 +67,9 @@ class Simulation:
                         to_avoid = {drone.path[0]}
                         if drone.previous_place is not None:
                             to_avoid.add(drone.previous_place)
-                        path = self.pathfinder.find_shortest_path(drone.place,
-                                                                  to_avoid)
+                        if isinstance(drone.place, Hub):
+                            path = self.pathfinder.find_shortest_path(
+                                drone.place, to_avoid)
                         if path != []:
                             if (get_path_len(path) <=
                                get_path_len(original_path) + 1):
@@ -87,8 +88,10 @@ class Simulation:
                                         (move, drone.place.name))
                                 except MovementError:
                                     to_avoid.add(drone.path[0])
-                                    path = self.pathfinder.find_shortest_path(
-                                        drone.place, to_avoid)
+                                    if isinstance(drone.place, Hub):
+                                        path = (
+                                            self.pathfinder.find_shortest_path(
+                                                drone.place, to_avoid))
                                     if path == []:
                                         drone.set_path(original_path)
                                         self.tracks[drone.id].append(

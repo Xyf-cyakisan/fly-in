@@ -3,7 +3,6 @@ from ..model.Drone import Drone
 
 
 class Place(Protocol):
-    place_type: str
     name: str
     drones: dict[int, Drone]
 

@@ -22,7 +22,6 @@ class Hub:
                     key = "type"
                 setattr(self, key, value)
         self.connections: list[Connection] = []
-        self.place_type: str = "hub"
 
     def setup_connection(self, connection: Connection) -> None:
         self.connections.append(connection)

@@ -1,11 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from ..model.Place import Place
 if TYPE_CHECKING:
     from ..model.Hub import Hub
 
 
-def get_path_len(path: list[Place]) -> int:
+def get_path_len(path: list[Hub]) -> int:
     counter = 0
     for hub in path:
         hub_type = getattr(hub, "type", None)
