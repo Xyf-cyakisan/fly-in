@@ -1,0 +1,109 @@
+Revue OOP du projet "fly-in"
+
+Résumé général
+-------------
+Le projet est organisé en modules `model`, `controller`, `view`, `parser`, et `utils`.
+La séparation en couches (contrôleur / modèle / vue) est respectée et le code est globalement lisible.
+Toutefois plusieurs points dlist[dict[str, str]]'amélioration OOP sont identifiés autour du principe de responsabilité unique, de l'encapsulation, du typage et des dépendances immuables.
+
+Forces
+------
+- Structure en packages claire (`source/model`, `source/view`, `source/controller`, `source/parser`, `source/utils`).
+- Usage explicite de types (annotations) et d'un `Protocol` pour `Place` : bonne intention pour la conception contractuelle.
+- Classes petites et focalisées dans `model` : `Hub`, `Drone`, `Connection`, `Pathfinder`, `Simulation` ont des responsabilités identifiables.
+- Vue séparée (`PygameView`) et logique UI isolée dans `view`.
+
+Points d'amélioration (classés par principe OOP)
+-----------------------------------------------
+1) Single Responsibility Principle (SRP)
+  - `MapConfig` (parser/validator/converter/IO) viole le SRP : lecture de fichiers, parsing, validation et conversion sont mélangés dans une seule classe. Extraire Parser / Converter / Validator / Data model améliorera testabilité et lisibilité.
+  - `Hub.__init__` applique `setattr` dynamiquement pour metadata : cette logique mélange construction d'état et adaptation runtime. Préférer un constructeur qui normalise explicitement les champs connus.
+
+2) Encapsulation
+  - De nombreuses propriétés d'instances sont publiques (e.g. `Hub.drones`, `Hub.connections`, `Drone.path`, `Drone.place`). Exposer via propriétés ou méthodes réduit le couplage et protège l'invariant interne.
+  - `PygameView` expose peu d'attributs privés correctement, mais utilise double-underscore pour masquer; garder cohérence (`_protected` vs `__mangled`) et documenter.
+
+3) Couplage et dépendances
+  - `PygameView` et `Controller` construisent directement `Simulation` / `MapConfig` instances. Utiliser l'injection de dépendances pour faciliter les tests (passer objets ou factories depuis l'extérieur) serait bénéfique.
+  - `Hub`, `Connection` et `Drone` se réfèrent mutuellement par types concrets (Hub/Connection). Là où un contrat suffit, utiliser `Place` / Protocol permettrait de réduire les dépendances concrètes.
+
+4) Typage et variance
+  - Utilisation de `list[Hub]` vs `list[Place]` cause des incompatibilités mypy (invariance des containers). Quand la fonction consomme seulement la séquence, préférer `Sequence[Place]` ou `Iterable[Place]`.
+  - `Place` Protocol déclare `name`, `drones` et méthodes ; `Hub` implémente ces éléments, mais le code mélange `Hub` et `Place` dans des annotations. Harmoniser : utiliser `Place` dans les interfaces publiques quand possible.
+
+5) Cohésion et responsabilités métier
+  - `MapConfig` contient beaucoup de logique métier de validation (noms, duplications, coordonnées). Extraire des validateurs purs rendra la logique plus testable.
+  - `Simulation` orchestre correctement la simulation mais contient du code qui pourrait être délégué (gestion des tours, reset des connections, collecte des capacités) en petites méthodes ou classes utilitaires.
+
+6) Exceptions et erreurs
+  - Utilisation d'exceptions génériques (`ValueError`) dans `MapConfig`. Créer des exceptions spécifiques (`ParseError`, `ValidationError`, `ConfigError`) rendra le comportement plus clair et testable.
+
+7) Mutabilité et invariants
+  - Beaucoup de structures mutables partagées (listes, dictionnaires) sont passées entre objets. Documenter les contrats (qui modifie quoi) ou utiliser des copies/structures immuables pour éviter effets de bord.
+  - `Hub.setup_connection` ajoute à `connections` en place — c'est OK, mais s'assurer que l'appel est toujours atomic et documenté.
+
+Observations détaillées par module
+---------------------------------
+- `source/parser/MapConfig.py`
+  - Regroupe la lecture du fichier, parsing, conversion et validations. Méthodes privées `_check_*` sont nombreuses et contiennent des branches lourdes. Recommander : Parser (I/O), Converter (types), Validator (règles métier), DataModel (final config).
+  - Remplacer `ValueError` par exceptions dédiées.
+  - Eviter modifications in-place de listes et tuples (utiliser nouvelles structures immuables quand possible).
+
+- `source/model/Hub.py`
+  - `__init__` utilise `setattr` sur metadata pour créer attributs `type`, `max_drones`, `color`, etc. Cela rend l'API dynamique et moins explicite : préférer initialiser explicitement un ensemble d'attributs connus et garder un `metadata` dict si tu veux rester flexible.
+  - Exposer des méthodes pour inspection (`is_full()`, `available_slots()`) plutôt que que le consommateur accède directement à `drones`.
+  - Considérer d'ajouter des invariants documentés (ex. `max_drones >= 0`).
+
+- `source/model/Drone.py`
+  - `previous_place` typé `Hub | None` alors que `place` est `Place`. Harmoniser à `Place | None` ou expliciter pourquoi `previous_place` est un `Hub` seulement.
+  - `set_path` prend `list[Hub]` : si uniquement lecture est requise, accepter `Sequence[Place]`/`Sequence[Hub]`.
+  - Méthodes sont concises ; bonne séparation du comportement par instance.
+
+- `source/model/Connection.py`
+  - Implémente bien la logique de passage et vérification des capacités.
+  - `_get_destination(self, drone_zone: Place) -> Place` est bien typé en contractant sur `Place`.
+  - Attention aux retours `bool | int` dans `_get_connection` (dans `Hub`) et `_get_connection` renvoie `False` ou index ; préférer `Optional[int]` pour la clarté (None vs False).
+
+- `source/model/Pathfinder.py`
+  - Conception orientée objet raisonnable ; garder `Hub` comme type concret est acceptable si l'algorithme nécessite des opérations spécifiques.
+  - Pour la réutilisabilité, accepter `Place`/`Protocol` dans les méthodes publiques si le comportement est générique.
+
+- `source/model/Simulation.py`
+  - Bonne orchestration de la simulation. Plusieurs responsabilités arborent le module (initialisation, pathfinding, déroulement des tours). Considérer extraire la logique de gestion des tours en une classe `TurnManager` si l'évolution est prévue.
+  - Les annotations sont bonnes mais mypy a relevé des incompatibilités liées à la variance ; revoir signatures publiques (Sequence vs list).
+
+- `source/view/PygameView.py` et `view/models/DroneSprite.py`
+  - Logique UI bien isolée.
+  - `PygameView` fait des calculs de layout et rendus — ça reste la responsabilité de la vue mais tu peux extraire des helpers (LayoutCalculator) pour réduire la taille de la classe.
+  - Gestion d'imports pygame avec fallback `sys.exit` est OK pour un exécutable mais gênera les tests unitaires : pour tester, injecter une abstraction ou permettre un mode headless.
+
+- `source/controller/Controller.py`
+  - Simple, fait orchestration. Utiliser méthodes privées `__set_*` est acceptable.
+  - Pour tests, rendre possible de fournir `MapConfig` et `Simulation` mockés plutôt que forcer la création depuis le contrôleur.
+
+- `source/utils` (MovementError, simulation_funcs)
+  - Petites fonctions utilitaires cohérentes.
+  - `get_path_len` et `check_restricted_connections` acceptent `list[Hub]` et `Hub` ; typage TYPE_CHECKING ok.
+
+Actions recommandées (priorisées)
+---------------------------------
+1. Refactorer `MapConfig` en Parser / Converter / Validator + data model (haute priorité).
+2. Harmoniser les annotations autour de `Place` Protocol vs `Hub` concrete : utiliser `Place` là où un contrat suffit, et `Hub` seulement si besoin d'API spécifique.
+3. Remplacer les `list[Place]` / `list[Hub]` exposés par `Sequence[Place]` / `Sequence[Hub]` pour réduire les erreurs de variance.
+4. Renforcer l'encapsulation : exposer des méthodes d'accès (e.g. `Hub.add_drone()`, `Hub.remove_drone()`, `Hub.is_full()`), et réduire l'accès direct à `drones` depuis l'extérieur.
+5. Introduire exceptions dédiées pour le parsing/validation.
+6. Ajouter tests unitaires module par module (Parser tests, Validator tests, Simulation behaviour tests, small integration test for one map).
+7. Faciliter l'injection de dépendances pour `PygameView` et `Controller` (passer des factories, permettre mode headless pour tests).
+
+Exemples concrets de petits changements
+--------------------------------------
+- Changer `_get_connection` pour retourner `Optional[int]` au lieu de `bool | int`.
+- Dans `Drone`, déclarer `previous_place: Place | None` si la sémantique l'autorise.
+- Dans signatures publiques qui ne mutent pas les séquences, remplacer `list[...]` par `Sequence[...]`.
+- Remplacer `setattr` dynamique par un mapping explicite de champs attendus (et garder `metadata` dict pour autres cas).
+
+Conclusion
+----------
+Le projet suit déjà une architecture claire (MVC-like). Les améliorations recommandées concernent surtout la robustesse typée, la séparation des responsabilités (notamment `MapConfig`) et l'encapsulation des invariants métier. En appliquant les priorités ci‑dessus le code gagnera en maintenabilité et testabilité.
+
+Souhaites-tu que je crée une PR qui applique automatiquement les changements prioritaires (extraction Parser/Validator skeleton + signatures Sequence/Optional fixes + exceptions dédiées) ?
