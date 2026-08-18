@@ -1,7 +1,7 @@
 import os
 from ..model.Hub import Hub
 from ..model.Connection import Connection
-from .models import DroneSprite
+from .model import DroneSprite
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 try:
@@ -179,7 +179,7 @@ class Renderer:
             pygame.display.Info().current_h,
         )
         pygame.display.set_icon(
-            pygame.image.load("source/assets/fly-in_icone." "png")
+            pygame.image.load("source/assets/Fly-in_icone." "png")
         )
         self.__screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.__clock = pygame.time.Clock()
@@ -212,6 +212,34 @@ class Renderer:
                 ),
             )
 
+    def _print_victory(self) -> None:
+        victory_font = pygame.font.Font("source/assets/Victory.ttf", 500)
+        message = "Victory!"
+        rainbow_colors = [
+            self.__COLORS["red"],
+            self.__COLORS["orange"],
+            self.__COLORS["yellow"],
+            self.__COLORS["green"],
+            self.__COLORS["cyan"],
+            self.__COLORS["blue"],
+            self.__COLORS["violet"],
+        ]
+        letter_surfaces = [
+            victory_font.render(
+                letter, True, rainbow_colors[index % len(rainbow_colors)]
+            )
+            for index, letter in enumerate(message)
+        ]
+        total_width = sum(surface.get_width() for surface in letter_surfaces)
+        x = (self.__screen_x // 2) - (total_width // 2)
+        y = (self.__screen_y // 2) - (victory_font.get_height() // 2)
+        for i, surface in enumerate(letter_surfaces):
+            self.__screen.blit(surface, (x, y))
+            if i + 1 != len(message) and message[i + 1] != "y":
+                x += surface.get_width()
+            else:
+                x += letter_surfaces[i - 1].get_width() // 3
+
     def _print_next_turn(self) -> None:
         if self.__actual_turn != len(self.__tracks[1]):
             self.__screen.fill(self.__COLORS["darkgrey"])
@@ -228,6 +256,8 @@ class Renderer:
                 )
             self._print_places_capacity(self.__actual_turn)
             self._print_turn_number()
+            if self.__actual_turn == len(self.__tracks[1]):
+                self._print_victory()
             print(f"Turn {self.__current_turn + 1}: ", end="")
             for drone in self.__drones:
                 print(
