@@ -12,7 +12,7 @@ Confirmed positives
 - The simulation runs successfully on all provided maps.
 - The recorded tracks are formatted correctly for all provided maps.
 - Performance targets from the subject are met on the provided benchmark maps, including the challenger map.
-- The project has a graphical representation through `source/view/PygameView.py`.
+- The project has a graphical representation through `source/view/Renderer.py`.
 - A `.gitignore` file is present.
 
 Blocking issue
@@ -39,7 +39,7 @@ Detailed notes
 - Parser / validation: implemented in `source/parser/MapConfig.py`.
 - Simulation / routing: implemented in `source/model/Simulation.py`.
 - Pathfinding: implemented in `source/model/Pathfinder.py`.
-- Visual feedback: implemented in `source/view/PygameView.py`.
+- Visual feedback: implemented in `source/view/Renderer.py`.
 - Subject benchmarks checked on provided maps:
   - easy maps: passed
   - medium maps: passed

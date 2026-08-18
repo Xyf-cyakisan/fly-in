@@ -16,7 +16,7 @@ except ImportError:
     sys.exit(1)
 
 
-class PygameView:
+class Renderer:
 
     __COLORS: dict[str, str | tuple[int, int, int]] = {
         "default": "white",
@@ -41,11 +41,15 @@ class PygameView:
         "grey": (192, 192, 192),
     }
 
-    def __init__(self, nb_drones: int, start_hub: Hub,
-                 hubs: dict[str, Hub], connections: list[Connection],
-                 tracks: dict[int, list[tuple[str, str] | str]],
-                 capacity: list[dict[str, str]]
-                 ) -> None:
+    def __init__(
+        self,
+        nb_drones: int,
+        start_hub: Hub,
+        hubs: dict[str, Hub],
+        connections: list[Connection],
+        tracks: dict[int, list[tuple[str, str] | str]],
+        capacity: list[dict[str, str]],
+    ) -> None:
         self.__nb_drones: int = nb_drones
         self.__start_hub: Hub = start_hub
         self.__hubs: dict[str, Hub] = hubs
@@ -101,19 +105,11 @@ class PygameView:
 
     def _set_distance_between_hubs(self) -> dict[str, dict[int, float]]:
         min_v = {}
-        min_v["x"] = min(
-            [hub.coordinates[0] for hub in self.__hubs.values()]
-        )
-        min_v["y"] = min(
-            [hub.coordinates[1] for hub in self.__hubs.values()]
-        )
+        min_v["x"] = min([hub.coordinates[0] for hub in self.__hubs.values()])
+        min_v["y"] = min([hub.coordinates[1] for hub in self.__hubs.values()])
         max_v = {}
-        max_v["x"] = max(
-            [hub.coordinates[0] for hub in self.__hubs.values()]
-        )
-        max_v["y"] = max(
-            [hub.coordinates[1] for hub in self.__hubs.values()]
-        )
+        max_v["x"] = max([hub.coordinates[0] for hub in self.__hubs.values()])
+        max_v["y"] = max([hub.coordinates[1] for hub in self.__hubs.values()])
         covered_by_map_x = self.__screen_x * 0.85
         covered_by_map_y = self.__screen_y * 0.90
         distance_between = {
@@ -238,9 +234,7 @@ class PygameView:
                     self.__tracks[drone.id][self.__current_turn][0],
                     end=(
                         " "
-                        if self.__tracks[drone.id][
-                            self.__current_turn
-                        ][0]
+                        if self.__tracks[drone.id][self.__current_turn][0]
                         != ""
                         else ""
                     ),

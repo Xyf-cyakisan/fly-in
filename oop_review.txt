@@ -11,7 +11,7 @@ Forces
 - Structure en packages claire (`source/model`, `source/view`, `source/controller`, `source/parser`, `source/utils`).
 - Usage explicite de types (annotations) et d'un `Protocol` pour `Place` : bonne intention pour la conception contractuelle.
 - Classes petites et focalisées dans `model` : `Hub`, `Drone`, `Connection`, `Pathfinder`, `Simulation` ont des responsabilités identifiables.
-- Vue séparée (`PygameView`) et logique UI isolée dans `view`.
+- Vue séparée (`Renderer`) et logique UI isolée dans `view`.
 
 Points d'amélioration (classés par principe OOP)
 -----------------------------------------------
@@ -21,10 +21,10 @@ Points d'amélioration (classés par principe OOP)
 
 2) Encapsulation
   - De nombreuses propriétés d'instances sont publiques (e.g. `Hub.drones`, `Hub.connections`, `Drone.path`, `Drone.place`). Exposer via propriétés ou méthodes réduit le couplage et protège l'invariant interne.
-  - `PygameView` expose peu d'attributs privés correctement, mais utilise double-underscore pour masquer; garder cohérence (`_protected` vs `__mangled`) et documenter.
+  - `Renderer` expose peu d'attributs privés correctement, mais utilise double-underscore pour masquer; garder cohérence (`_protected` vs `__mangled`) et documenter.
 
 3) Couplage et dépendances
-  - `PygameView` et `Controller` construisent directement `Simulation` / `MapConfig` instances. Utiliser l'injection de dépendances pour faciliter les tests (passer objets ou factories depuis l'extérieur) serait bénéfique.
+  - `Renderer` et `Controller` construisent directement `Simulation` / `MapConfig` instances. Utiliser l'injection de dépendances pour faciliter les tests (passer objets ou factories depuis l'extérieur) serait bénéfique.
   - `Hub`, `Connection` et `Drone` se réfèrent mutuellement par types concrets (Hub/Connection). Là où un contrat suffit, utiliser `Place` / Protocol permettrait de réduire les dépendances concrètes.
 
 4) Typage et variance
@@ -72,9 +72,9 @@ Observations détaillées par module
   - Bonne orchestration de la simulation. Plusieurs responsabilités arborent le module (initialisation, pathfinding, déroulement des tours). Considérer extraire la logique de gestion des tours en une classe `TurnManager` si l'évolution est prévue.
   - Les annotations sont bonnes mais mypy a relevé des incompatibilités liées à la variance ; revoir signatures publiques (Sequence vs list).
 
-- `source/view/PygameView.py` et `view/models/DroneSprite.py`
+- `source/view/Renderer.py` et `view/models/DroneSprite.py`
   - Logique UI bien isolée.
-  - `PygameView` fait des calculs de layout et rendus — ça reste la responsabilité de la vue mais tu peux extraire des helpers (LayoutCalculator) pour réduire la taille de la classe.
+  - `Renderer` fait des calculs de layout et rendus — ça reste la responsabilité de la vue mais tu peux extraire des helpers (LayoutCalculator) pour réduire la taille de la classe.
   - Gestion d'imports pygame avec fallback `sys.exit` est OK pour un exécutable mais gênera les tests unitaires : pour tester, injecter une abstraction ou permettre un mode headless.
 
 - `source/controller/Controller.py`
@@ -93,7 +93,7 @@ Actions recommandées (priorisées)
 4. Renforcer l'encapsulation : exposer des méthodes d'accès (e.g. `Hub.add_drone()`, `Hub.remove_drone()`, `Hub.is_full()`), et réduire l'accès direct à `drones` depuis l'extérieur.
 5. Introduire exceptions dédiées pour le parsing/validation.
 6. Ajouter tests unitaires module par module (Parser tests, Validator tests, Simulation behaviour tests, small integration test for one map).
-7. Faciliter l'injection de dépendances pour `PygameView` et `Controller` (passer des factories, permettre mode headless pour tests).
+7. Faciliter l'injection de dépendances pour `Renderer` et `Controller` (passer des factories, permettre mode headless pour tests).
 
 Exemples concrets de petits changements
 --------------------------------------

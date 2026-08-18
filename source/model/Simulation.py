@@ -31,6 +31,9 @@ class Simulation:
             drone = Drone(id + 1, self.start_hub)
             self.drones.append(drone)
             self.start_hub.drones[id + 1] = drone
+        self.pathfinder: Pathfinder = Pathfinder(self.start_hub,
+                                                 self.end_hub, self.hubs,
+                                                 self.connections)
         self.turns: int = 0
         self.tracks: dict[int, list[tuple[str, str] | str]] = {drone.id: [] for
                                                                drone in
@@ -39,11 +42,6 @@ class Simulation:
             place.name: f"{len(place.drones)}/{getattr(place, "max_drones",
                                                        1)}"
                         for place in list(self.hubs.values())}]
-
-    def _set_pathfinder(self) -> None:
-        self.pathfinder: Pathfinder = Pathfinder(self.start_hub,
-                                                 self.end_hub, self.hubs,
-                                                 self.connections)
 
     def _set_drones_path(self) -> None:
         for drone in self.drones:
@@ -94,7 +92,6 @@ class Simulation:
                     break
 
     def run_simulation(self) -> None:
-        self._set_pathfinder()
         self._set_drones_path()
         while len(self.end_hub.drones) < len(self.drones):
             for drone in self.drones:
