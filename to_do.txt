@@ -1,3 +1,4 @@
+mypyVoir
 Voir si faire des classes pour hub/connection ect.... dans Renderer n'est pas plus judicieux
 Faire correctement la couleur arc-en-ciel
 Voir s'il faut mieux gerer l'encapsulation des donnees
