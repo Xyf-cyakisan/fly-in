@@ -39,7 +39,7 @@ class Simulation:
                                                                drone in
                                                                self.drones}
         self.capacity: dict[str, list[str]] = {place.name: [
-            f"{len(place.drones)}/{getattr(place, "max_drones", 1)}"]
+            f"{len(place.drones)}/{getattr(place, 'max_drones', 1)}"]
             for place in self.hubs.values()}
 
     def _set_drones_path(self) -> None:
@@ -94,7 +94,7 @@ class Simulation:
         for key in self.capacity.keys():
             place = self.hubs[key]
             self.capacity[key].append(
-                f"{len(place.drones)}/{getattr(place, "max_drones", 1)}")
+                f"{len(place.drones)}/{getattr(place, 'max_drones', 1)}")
 
     def run_simulation(self) -> None:
         self._set_drones_path()
