@@ -1,7 +1,9 @@
+from typing import Any
 import pygame
+from .Sprite import Sprite
 
 
-class DroneSprite(pygame.sprite.Sprite):
+class DroneSprite(Sprite):
     def __init__(self, id: int, color: str | tuple[int, int, int], width: int,
                  height: int) -> None:
         pygame.sprite.Sprite.__init__(self)
@@ -13,7 +15,9 @@ class DroneSprite(pygame.sprite.Sprite):
         self.id: int = id
 
     def draw(self, coordinates: tuple[float, float],
-             screen: pygame.surface.Surface, font: pygame.font.Font) -> None:
+             extras: dict[str, Any]) -> None:
+        screen = extras.get("screen")
+        font = extras.get("font")
         self.square.center = (int(coordinates[0]), int(coordinates[1]))
         screen.blit(self.image, self.square)
         number = font.render(str(self.id), True, "white")

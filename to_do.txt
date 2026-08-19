@@ -1,4 +1,8 @@
 mypyVoir
 Voir si faire des classes pour hub/connection ect.... dans Renderer n'est pas plus judicieux
 Faire correctement la couleur arc-en-ciel
-Voir s'il faut mieux gerer l'encapsulation des donnees
+Voir s'il faut mieux gerer l'encapsulation des donnees et des fonctions/methodes
+Gerer double nb_drones + double metadata dans parsing puis refaire plein de tests pour voir si tout est bon
+QUAND TU PUSH TOUT OUBLIE PAS D'ENLEVER TOUS LES FICHIERS QUI SERVENT A RIEN (to_do, feedback ect...)
+Fais le readme.md
+Proteger les imports avec des try except

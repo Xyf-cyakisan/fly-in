@@ -1,7 +1,14 @@
 import os
 import sys
 from source import Controller
-from colorama import Fore, Style
+try:
+    from colorama import Fore, Style
+except ImportError:
+    print(
+        "\033[0;31mError: 'Colorama' module not found,"
+        "please run 'make install' command before 'make run'\033[0m"
+    )
+    sys.exit(4)
 
 
 def main() -> None:

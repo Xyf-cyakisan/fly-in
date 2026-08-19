@@ -38,10 +38,9 @@ class Simulation:
         self.tracks: dict[int, list[tuple[str, str] | str]] = {drone.id: [] for
                                                                drone in
                                                                self.drones}
-        self.capacity: list[dict[str, str]] = [{
-            place.name: f"{len(place.drones)}/{getattr(place, "max_drones",
-                                                       1)}"
-                        for place in list(self.hubs.values())}]
+        self.capacity: dict[str, list[str]] = {place.name: [
+            f"{len(place.drones)}/{getattr(place, "max_drones", 1)}"]
+            for place in self.hubs.values()}
 
     def _set_drones_path(self) -> None:
         for drone in self.drones:
@@ -91,6 +90,12 @@ class Simulation:
                 else:
                     break
 
+    def _update_capacity(self) -> None:
+        for key in self.capacity.keys():
+            place = self.hubs[key]
+            self.capacity[key].append(
+                f"{len(place.drones)}/{getattr(place, "max_drones", 1)}")
+
     def run_simulation(self) -> None:
         self._set_drones_path()
         while len(self.end_hub.drones) < len(self.drones):
@@ -104,10 +109,7 @@ class Simulation:
                         self.tracks[drone.id].append((move, drone.place.name))
                     except MovementError:
                         self._switch_path_trial_and_error(drone)
-            self.capacity.append(
-                {place.name: f"{len(place.drones)}/{getattr(place,
-                                                            "max_drones", 1)}"
-                 for place in list(self.hubs.values())})
+            self._update_capacity()
             for connection in self.connections:
                 connection.reset()
             self.turns += 1

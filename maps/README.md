@@ -36,7 +36,7 @@ This collection contains carefully crafted maps designed to test different aspec
 Maps contain paths that lead nowhere, testing if algorithms can backtrack or avoid getting stuck.
 
 ### 🔄 **Circular Loops** 
-Cycles in the Simulation that can cause infinite loops in poorly designed algorithms.
+Cycles in the graph that can cause infinite loops in poorly designed algorithms.
 
 ### ⚡ **Capacity Constraints**
 - Zone capacity limits (max_drones)
