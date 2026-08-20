@@ -156,7 +156,7 @@ class MapConfig:
                 "syntax is [metadata1=value1 metadata2=value2] "
                 "at the end of the line"
             )
-        dict_metadata = {}
+        dict_metadata: dict[str, Any] = {}
         for one_line_metadata in list_metadata:
             metadata = one_line_metadata.split("=")
             if len(metadata) != 2:
