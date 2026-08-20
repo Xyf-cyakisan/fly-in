@@ -5,17 +5,23 @@ from ..pygame_utils import COLORS
 
 
 class ConnectionSprite(Sprite):
-    def __init__(self, name: str, hubs: tuple[str, str]) -> None:
+    def __init__(self, name: str, hubs: list[str]) -> None:
+        pygame.sprite.Sprite.__init__(self)
         self.name: str = name
-        self.hubs: tuple[str, str] = hubs
+        self.hubs: list[str] = hubs
 
-    def draw(self, coordinates: tuple[tuple[float, float]],
+    def draw(self, coordinates: tuple[float, float],
              extras: dict[str, Any]) -> None:
-        screen = extras.get("screen")
-        pygame.draw.line(
-                screen,
-                COLORS["grey"],
-                coordinates[0],
-                coordinates[1],
-                20,
-        )
+        sc_coords = extras.get("coordinates")
+        if isinstance(sc_coords, tuple) and all(isinstance(number, float)
+                                                for number in sc_coords):
+            potential_screen = extras.get("screen")
+            if isinstance(potential_screen, pygame.surface.Surface):
+                screen: pygame.surface.Surface = potential_screen
+            pygame.draw.line(
+                    screen,
+                    COLORS["grey"],
+                    coordinates,
+                    sc_coords,
+                    20,
+            )

@@ -14,7 +14,7 @@ COLORS: dict[str, str | tuple[int, int, int]] = {
         "maroon": (128, 0, 0),
         "orange": (255, 128, 0),
         "purple": (160, 60, 200),
-        "rainbow": (255, 100, 150),
+        "rainbow": "rainbow",
         "red": (220, 50, 50),
         "violet": (130, 80, 220),
         "yellow": (220, 200, 30),

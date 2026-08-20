@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from ..model.Hub import Hub
 from ..model.Connection import Connection
 from .model import DroneSprite, Sprite, HubSprite, ConnectionSprite
@@ -27,16 +28,16 @@ class Renderer:
         capacity: dict[str, list[str]],
     ) -> None:
         self.__nb_drones: int = nb_drones
-        self.__capacity: list[dict[str, str]] = capacity
+        self.__tracks: dict[int, list[tuple[str, str] | str]] = tracks
+        self.__current_turn: int = -1
+        self.__actual_turn: int = 0
         self._initialize_pygame()
         self._initialize_coords_dict(hubs, connections)
         self._initialize_sprites(capacity, start_hub, list(hubs.values()),
                                  connections)
-        self.__tracks: dict[int, list[tuple[str, str] | str]] = tracks
-        self.__current_turn: int = -1
-        self.__actual_turn: int = 0
 
-    def _set_distance_between_hubs(self, hubs) -> dict[str, dict[int, float]]:
+    def _set_distance_between_hubs(self, hubs: dict[str, Hub]
+                                   ) -> dict[str, dict[int, float]]:
         min_v = {}
         min_v["x"] = min([hub.coordinates[0] for hub in hubs.values()])
         min_v["y"] = min([hub.coordinates[1] for hub in hubs.values()])
@@ -82,9 +83,10 @@ class Renderer:
                 counter += 1
         return converted_coordinates
 
-    def _initialize_coords_dict(self, hubs, connections) -> None:
+    def _initialize_coords_dict(self, hubs: dict[str, Hub],
+                                connections: list[Connection]) -> None:
         converted_coordinates = self._set_distance_between_hubs(hubs)
-        self.__coords = {}
+        self.__coords: dict[str, Any] = {}
         for hub in hubs.values():
             self.__coords[hub.name] = (
                 converted_coordinates["x"][hub.coordinates[0]],
@@ -119,7 +121,8 @@ class Renderer:
             COLORS[getattr(start_hub, "color", "default")],
             getattr(start_hub, "type", "normal"))
         self.__still_sprites: list[Sprite] = [
-            ConnectionSprite(connection.name, connection.hubs) for
+            ConnectionSprite(connection.name, [hub.name for hub in
+                                               connection.hubs]) for
             connection in connections]
         self.__still_sprites.extend([HubSprite(hub.name, capacity[hub.name],
                                     COLORS[getattr(hub, "color", "default")],
@@ -146,19 +149,6 @@ class Renderer:
                 self.__coords[self.__start_hub.name],
                 {"screen": self.__screen,
                  "font": self.__font}
-            )
-
-    def _print_places_capacity(self, current_turn: int) -> None:
-        for place_name, place_capacity in self.__capacity[
-            current_turn
-        ].items():
-            text = self.__font.render(place_capacity, True, "white", "black")
-            self.__screen.blit(
-                text,
-                (
-                    self.__coords[place_name][0] - 17.5,
-                    self.__coords[place_name][1] - 60,
-                ),
             )
 
     def _print_victory(self) -> None:
@@ -189,7 +179,7 @@ class Renderer:
             else:
                 x += letter_surfaces[i - 1].get_width() // 3
 
-    def _update_capacity(self):
+    def _update_capacity(self) -> None:
         for sprite in self.__still_sprites:
             if isinstance(sprite, HubSprite):
                 extras = {"screen": self.__screen,
@@ -207,13 +197,15 @@ class Renderer:
             self.__current_turn += 1
             self.__actual_turn += 1
             for drone in self.__drones:
-                drone.draw(
-                    self.__coords[
+                extras = {"screen": self.__screen,
+                          "font": self.__font}
+                coords = self.__coords[
                         self.__tracks[drone.id][self.__current_turn][1]
-                    ],
-                    {"screen": self.__screen,
-                     "font": self.__font}
-                )
+                    ]
+                if isinstance(coords[0], tuple):
+                    extras["coordinates"] = coords[1]
+                    coords = coords[0]
+                drone.draw(coords, extras)
             self._update_capacity()
             self._print_turn_number()
             if self.__actual_turn == len(self.__tracks[1]):
@@ -234,13 +226,17 @@ class Renderer:
 
     def _reset_map(self) -> None:
         for sprite in self.__still_sprites:
+            coords = self.__coords[getattr(sprite, "name")]
             extras = {"screen": self.__screen,
                       "font": self.__font,
                       "type": getattr(sprite,
                                       "type",
                                       None),
                       "turn": self.__actual_turn}
-            sprite.draw(self.__coords[sprite.name], extras)
+            if isinstance(coords[0], tuple):
+                extras["coordinates"] = coords[1]
+                coords = coords[0]
+            sprite.draw(coords, extras)
 
     def _print_turn_number(self) -> None:
         text = self.__font.render(
@@ -260,6 +256,7 @@ class Renderer:
     def display_simulation(self) -> None:
         self._initialize_window()
         self._reset_map()
+        self._update_capacity()
         self._initialize_drones()
         self._print_turn_number()
         pygame.display.flip()
