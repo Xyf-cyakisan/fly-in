@@ -28,4 +28,5 @@ def check_restricted_connections(restricted_hub: Hub) -> int:
                 if drone.previous_place != restricted_hub
             ]
         )
+    counter += len(restricted_hub.drones)
     return counter

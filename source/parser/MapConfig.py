@@ -166,6 +166,11 @@ class MapConfig:
                     "at the end of the line"
                 )
             else:
+                if dict_metadata.get(metadata[0], None) is not None:
+                    raise ValueError(
+                        f"Error (line {line_number}): metadata '{metadata[0]}'"
+                        " has already been set"
+                    )
                 if (
                     line[0] not in cls.VALID_METADATA.keys()
                     or metadata[0] not in cls.VALID_METADATA[line[0]].keys()
@@ -283,12 +288,14 @@ class MapConfig:
     ) -> dict[str, Any]:
         try:
             dict_content["nb_drones"] = int(dict_content["nb_drones"])
-            if dict_content["nb_drones"] <= 0:
+            if (dict_content["nb_drones"] <= 0 or
+               dict_content["nb_drones"] > 200):
                 raise ValueError
         except ValueError:
             raise ValueError(
                 f"Error (line {dict_content['lines']['nb_drones']}): "
-                "nb_drones needs to be a positive integer higher than 0"
+                "nb_drones needs to be a positive integer higher than 0 and "
+                "equal or lower than 200"
             )
         return dict_content
 
@@ -381,6 +388,10 @@ class MapConfig:
                     line_content = cls._check_mandatory_data(line, i)
                     metadata = cls._check_metadata(line, i)
                     if line[0] == "nb_drones":
+                        if dict_content["nb_drones"] is not None:
+                            raise ValueError(
+                                f"Error (line {i}): Only 1 nb_drones"
+                            )
                         dict_content["nb_drones"] = line_content[0]
                         dict_content["lines"]["nb_drones"] = i
                         dict_content["metadata"]["nb_drones"] = metadata
