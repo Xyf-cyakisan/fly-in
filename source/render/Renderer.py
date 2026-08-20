@@ -249,6 +249,7 @@ class Renderer:
         self.__current_turn = -1
         self.__screen.fill(COLORS["darkgrey"])
         self._reset_map()
+        self._update_capacity()
         self._initialize_drones()
         self._print_turn_number()
         pygame.display.flip()
