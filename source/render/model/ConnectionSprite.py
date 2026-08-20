@@ -13,7 +13,8 @@ class ConnectionSprite(Sprite):
     def draw(self, coordinates: tuple[float, float],
              extras: dict[str, Any]) -> None:
         sc_coords = extras.get("coordinates")
-        if isinstance(sc_coords, tuple) and all(isinstance(number, float)
+        if isinstance(sc_coords, tuple) and all(isinstance(number, (float, int)
+                                                           )
                                                 for number in sc_coords):
             potential_screen = extras.get("screen")
             if isinstance(potential_screen, pygame.surface.Surface):
