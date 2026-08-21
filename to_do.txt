@@ -5,8 +5,7 @@ Les connections apparaissent pas sur certaines maps #
 Gerer double nb_drones + double metadata dans parsing puis refaire plein de tests pour voir si tout est bon #
 donner une limite a nb_drones pour pas faire crasher le programme #
 Gerer special map qui crash a 64+ drones #
-Gerer l'accessibilite des zones restrcited en regardant si les drones etant dans la zone vont partir au prochain tour ou pas
-Voir s'il faut mieux gerer l'encapsulation des donnees et des fonctions/methodes
+Voir s'il faut mieux gerer l'encapsulation des donnees et des fonctions/methodes #
 Proteger les imports avec des try except
 Fais le readme.md
 QUAND TU PUSH TOUT OUBLIE PAS D'ENLEVER TOUS LES FICHIERS QUI SERVENT A RIEN (to_do, feedback ect...)
