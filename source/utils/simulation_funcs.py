@@ -19,7 +19,7 @@ def get_path_len(path: list[Hub]) -> int:
 
 
 def check_restricted_connections(restricted_hub: Hub) -> int:
-    counter = 0
+    counter = len(restricted_hub.drones)
     for connection in restricted_hub.connections:
         counter += sum(
             [
@@ -28,5 +28,4 @@ def check_restricted_connections(restricted_hub: Hub) -> int:
                 if drone.previous_place != restricted_hub
             ]
         )
-    counter += len(restricted_hub.drones)
     return counter

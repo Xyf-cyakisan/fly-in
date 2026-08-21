@@ -15,12 +15,12 @@ class Controller:
 
     def __set_view(self) -> None:
         self.__view: Renderer = Renderer(
-            len(self.__simulation.drones),
-            self.__simulation.start_hub,
-            self.__simulation.hubs,
-            self.__simulation.connections,
-            self.__simulation.tracks,
-            self.__simulation.capacity,
+            self.__simulation.get_len_drones(),
+            self.__simulation.get_start_hub(),
+            self.__simulation.get_hubs(),
+            self.__simulation.get_connections(),
+            self.__simulation.get_tracks(),
+            self.__simulation.get_capacity()
         )
 
     def run(self) -> None:
