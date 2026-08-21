@@ -9,3 +9,4 @@ Voir s'il faut mieux gerer l'encapsulation des donnees et des fonctions/methodes
 Proteger les imports avec des try except
 Fais le readme.md
 QUAND TU PUSH TOUT OUBLIE PAS D'ENLEVER TOUS LES FICHIERS QUI SERVENT A RIEN (to_do, feedback ect...)
+MYPY CHECK A LA FIN
