@@ -13,18 +13,34 @@ class Hub:
         primary_data: tuple[str, int, int],
         metadata: dict[str, str | int | None] | None,
     ) -> None:
-        self.drones: dict[int, Drone] = {}
-        self.name: str = primary_data[0]
-        self.coordinates: tuple[int, int] = (primary_data[1], primary_data[2])
+        self.__drones: dict[int, Drone] = {}
+        self.__name: str = primary_data[0]
+        self.__coordinates: tuple[int, int] = (primary_data[1],
+                                               primary_data[2])
         if metadata is not None:
             for key, value in metadata.items():
-                if key == 'zone':
+                if key == "zone":
                     key = "type"
                 setattr(self, key, value)
-        self.connections: list[Connection] = []
+        self.__connections: list[Connection] = []
+
+    def add_drone(self, id: int, drone: Drone) -> None:
+        self.__drones[id] = drone
+
+    def get_drones(self) -> dict[int, Drone]:
+        return self.__drones
+
+    def get_name(self) -> str:
+        return self.__name
+
+    def get_coordinates(self) -> tuple[int, int]:
+        return self.__coordinates
+
+    def get_connections(self) -> list[Connection]:
+        return self.__connections
 
     def setup_connection(self, connection: Connection) -> None:
-        self.connections.append(connection)
+        self.__connections.append(connection)
 
     def drone_arrival(self, drone: Drone) -> None:
         type = getattr(self, "type", None)
@@ -34,27 +50,27 @@ class Hub:
             if type == "blocked":
                 raise MovementError
         max_drones = getattr(self, "max_drones", None)
-        if max_drones == len(self.drones):
+        if max_drones == len(self.__drones):
             raise MovementError
         else:
-            self.drones[drone.id] = drone
-        drone.path.pop(0)
-        drone.place = self
+            self.__drones[drone.get_id()] = drone
+        drone.pop_path()
+        drone.set_place(self)
 
     def _get_connection(self, drone: Drone) -> bool | int:
-        for i, connection in enumerate(self.connections):
-            if drone.path[0] in connection.hubs:
+        for i, connection in enumerate(self.__connections):
+            if drone.get_path()[0] in connection.get_hubs():
                 return i
         return False
 
     def drone_departure(self, drone_id: int) -> None:
-        drone = self.drones[drone_id]
+        drone = self.__drones[drone_id]
         connection = self._get_connection(drone)
         if connection is not False:
-            self.connections[connection].drone_passing_through(drone)
-            self.drones.pop(drone_id)
+            self.__connections[connection].drone_passing_through(drone)
+            self.__drones.pop(drone_id)
         else:
             raise ValueError(
-                f"Error: drone {drone.id} cannot go to "
-                f"{drone.path[0].name} from {self.name}"
+                f"Error: drone {drone.get_id()} cannot go to "
+                f"{drone.get_path()[0].get_name()} from {self.__name}"
             )

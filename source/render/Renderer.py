@@ -39,11 +39,11 @@ class Renderer:
     def _set_distance_between_hubs(self, hubs: dict[str, Hub]
                                    ) -> dict[str, dict[int, float]]:
         min_v = {}
-        min_v["x"] = min([hub.coordinates[0] for hub in hubs.values()])
-        min_v["y"] = min([hub.coordinates[1] for hub in hubs.values()])
+        min_v["x"] = min([hub.get_coordinates()[0] for hub in hubs.values()])
+        min_v["y"] = min([hub.get_coordinates()[1] for hub in hubs.values()])
         max_v = {}
-        max_v["x"] = max([hub.coordinates[0] for hub in hubs.values()])
-        max_v["y"] = max([hub.coordinates[1] for hub in hubs.values()])
+        max_v["x"] = max([hub.get_coordinates()[0] for hub in hubs.values()])
+        max_v["y"] = max([hub.get_coordinates()[1] for hub in hubs.values()])
         covered_by_map_x = self.__screen_x * 0.85
         covered_by_map_y = self.__screen_y * 0.90
         distance_between = {
@@ -88,19 +88,19 @@ class Renderer:
         converted_coordinates = self._set_distance_between_hubs(hubs)
         self.__coords: dict[str, Any] = {}
         for hub in hubs.values():
-            self.__coords[hub.name] = (
-                converted_coordinates["x"][hub.coordinates[0]],
-                converted_coordinates["y"][hub.coordinates[1]],
+            self.__coords[hub.get_name()] = (
+                converted_coordinates["x"][hub.get_coordinates()[0]],
+                converted_coordinates["y"][hub.get_coordinates()[1]],
             )
         for connection in connections:
-            self.__coords[connection.name] = (
+            self.__coords[connection.get_name()] = (
                 (
-                    self.__coords[connection.hubs[0].name][0],
-                    self.__coords[connection.hubs[0].name][1]
+                    self.__coords[connection.get_hubs()[0].get_name()][0],
+                    self.__coords[connection.get_hubs()[0].get_name()][1]
                 ),
                 (
-                    self.__coords[connection.hubs[1].name][0],
-                    self.__coords[connection.hubs[1].name][1]
+                    self.__coords[connection.get_hubs()[1].get_name()][0],
+                    self.__coords[connection.get_hubs()[1].get_name()][1]
                 )
             )
 
@@ -117,17 +117,19 @@ class Renderer:
                             hubs: list[Hub],
                             connections: list[Connection]) -> None:
         self.__start_hub: HubSprite = HubSprite(
-            start_hub.name, capacity[start_hub.name],
+            start_hub.get_name(), capacity[start_hub.get_name()],
             COLORS[getattr(start_hub, "color", "default")],
             getattr(start_hub, "type", "normal"))
         self.__still_sprites: list[Sprite] = [
-            ConnectionSprite(connection.name, [hub.name for hub in
-                                               connection.hubs]) for
-            connection in connections]
-        self.__still_sprites.extend([HubSprite(hub.name, capacity[hub.name],
+            ConnectionSprite(connection.get_name(), [hub.get_name() for hub in
+                                                     connection.get_hubs()])
+            for connection in connections]
+        self.__still_sprites.extend([HubSprite(hub.get_name(),
+                                               capacity[hub.get_name()],
                                     COLORS[getattr(hub, "color", "default")],
                                     getattr(hub, "type", "normal")) for hub
-                                    in hubs if hub.name != start_hub.name])
+                                    in hubs if hub.get_name() !=
+                                    start_hub.get_name()])
         self.__still_sprites.append(self.__start_hub)
         self.__drones: list[DroneSprite] = [DroneSprite(id, "blue", 25, 25)
                                             for id in

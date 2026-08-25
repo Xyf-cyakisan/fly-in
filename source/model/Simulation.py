@@ -20,8 +20,8 @@ class Simulation:
             self.__hubs[hub[0]] = Hub(hub, map_config.metadata[hub[0]])
         self.__hubs.update(
             {
-                self.__start_hub.name: self.__start_hub,
-                self.__end_hub.name: self.__end_hub,
+                self.__start_hub.get_name(): self.__start_hub,
+                self.__end_hub.get_name(): self.__end_hub,
             }
         )
         self.__connections: list[Connection] = []
@@ -38,16 +38,16 @@ class Simulation:
         for id in range(map_config.nb_drones):
             drone = Drone(id + 1, self.__start_hub)
             self.__drones.append(drone)
-            self.__start_hub.drones[id + 1] = drone
+            self.__start_hub.add_drone(id + 1, drone)
         self.__pathfinder: Pathfinder = Pathfinder(
-            self.__start_hub, self.__end_hub, self.__hubs, self.__connections
+            self.__end_hub, self.__hubs
         )
         self.__tracks: dict[int, list[tuple[str, str] | str]] = {
-            drone.id: [] for drone in self.__drones
+            drone.get_id(): [] for drone in self.__drones
         }
         self.__capacity: dict[str, list[str]] = {
-            place.name: [
-                f"{len(place.drones)}/{getattr(place, 'max_drones', 1)}"
+            place.get_name(): [
+                f"{len(place.get_drones())}/{getattr(place, 'max_drones', 1)}"
             ]
             for place in self.__hubs.values()
         }
@@ -61,7 +61,7 @@ class Simulation:
     def get_connections(self) -> list[Connection]:
         return self.__connections
 
-    def get_len_drones(self) -> list[Drone]:
+    def get_len_drones(self) -> int:
         return len(self.__drones)
 
     def get_tracks(self) -> dict[int, list[tuple[str, str] | str]]:
@@ -77,12 +77,15 @@ class Simulation:
             )
 
     def _switch_path_trial_and_error(self, drone: Drone) -> None:
-        original_path = drone.path
-        to_avoid = {drone.path[0]}
-        if drone.previous_place is not None:
-            to_avoid.add(drone.previous_place)
-        if isinstance(drone.place, Hub):
-            path = self.__pathfinder.find_shortest_path(drone.place, to_avoid)
+        original_path = drone.get_path()
+        to_avoid = {drone.get_path()[0]}
+        previous_place = drone.get_previous_place()
+        if isinstance(previous_place, Hub):
+            to_avoid.add(previous_place)
+        drone_place = drone.get_place()
+        if isinstance(drone_place, Hub):
+            path = self.__pathfinder.find_shortest_path(drone_place,
+                                                        to_avoid)
         if path != []:
             if get_path_len(path) <= get_path_len(original_path) + 1:
                 drone.set_path(path)
@@ -90,21 +93,28 @@ class Simulation:
                 to_avoid.add(path[0])
         if path == []:
             drone.set_path(original_path)
-            self.__tracks[drone.id].append(("", drone.place.name))
+            self.__tracks[drone.get_id()].append(("",
+                                                  drone.get_place().get_name())
+                                                 )
         else:
             while True:
                 try:
                     move = drone.move()
-                    self.__tracks[drone.id].append((move, drone.place.name))
+                    self.__tracks[
+                        drone.get_id()].append((move,
+                                                drone.get_place().get_name()))
                 except MovementError:
-                    to_avoid.add(drone.path[0])
-                    if isinstance(drone.place, Hub):
+                    to_avoid.add(drone.get_path()[0])
+                    drone_place = drone.get_place()
+                    if isinstance(drone_place, Hub):
                         path = self.__pathfinder.find_shortest_path(
-                            drone.place, to_avoid
+                            drone_place, to_avoid
                         )
                     if path == []:
                         drone.set_path(original_path)
-                        self.__tracks[drone.id].append(("", drone.place.name))
+                        self.__tracks[drone.get_id()].append(("",
+                                                              drone.get_place(
+                                                              ).get_name()))
                         break
                     if get_path_len(path) <= get_path_len(original_path) + 1:
                         drone.set_path(path)
@@ -117,21 +127,24 @@ class Simulation:
         for key in self.__capacity.keys():
             place = self.__hubs[key]
             self.__capacity[key].append(
-                f"{len(place.drones)}/{getattr(place, 'max_drones', 1)}"
+                f"{len(place.get_drones())}/{getattr(place, 'max_drones', 1)}"
             )
 
     def run_simulation(self) -> None:
         self._set_drones_path()
-        while len(self.__end_hub.drones) < len(self.__drones):
+        while len(self.__end_hub.get_drones()) < len(self.__drones):
             for drone in self.__drones:
-                if drone.place == self.__end_hub:
-                    self.__tracks[drone.id].append(("", drone.place.name))
+                if drone.get_place() == self.__end_hub:
+                    self.__tracks[drone.get_id()].append(("",
+                                                          drone.get_place(
+                                                          ).get_name()))
                     continue
                 else:
                     try:
                         move = drone.move()
-                        self.__tracks[drone.id].append((move,
-                                                        drone.place.name))
+                        self.__tracks[drone.get_id()
+                                      ].append(
+                                          (move, drone.get_place().get_name()))
                     except MovementError:
                         self._switch_path_trial_and_error(drone)
             self._update_capacity()
