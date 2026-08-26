@@ -54,8 +54,8 @@ class Hub:
             raise MovementError
         else:
             self.add_drone(drone.get_id(), drone)
-        drone.pop_path()
-        drone.set_place(self)
+            drone.pop_path()
+            drone.set_place(self)
 
     def _get_connection(self, drone: Drone) -> bool | int:
         for i, connection in enumerate(self.__connections):
