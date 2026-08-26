@@ -53,7 +53,7 @@ class Hub:
         if max_drones == len(self.__drones):
             raise MovementError
         else:
-            self.__drones[drone.get_id()] = drone
+            self.add_drone(drone.get_id(), drone)
         drone.pop_path()
         drone.set_place(self)
 
