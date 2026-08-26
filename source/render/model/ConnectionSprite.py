@@ -16,7 +16,6 @@ class ConnectionSprite(Sprite):
     def __init__(self, name: str, hubs: list[str]) -> None:
         pygame.sprite.Sprite.__init__(self)
         self.__name: str = name
-        self.__hubs: list[str] = hubs
 
     def get_name(self) -> str:
         return self.__name
