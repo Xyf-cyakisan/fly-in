@@ -121,8 +121,7 @@ class Renderer:
             COLORS[getattr(start_hub, "color", "default")],
             getattr(start_hub, "type", "normal"))
         self.__still_sprites: list[Sprite] = [
-            ConnectionSprite(connection.get_name(), [hub.get_name() for hub in
-                                                     connection.get_hubs()])
+            ConnectionSprite(connection.get_name())
             for connection in connections]
         self.__still_sprites.extend([HubSprite(hub.get_name(),
                                                capacity[hub.get_name()],
@@ -190,7 +189,8 @@ class Renderer:
                                           "type",
                                           None),
                           "turn": self.__actual_turn}
-                sprite.update_capacity(self.__coords[sprite.get_name()], extras)
+                sprite.update_capacity(self.__coords[sprite.get_name()],
+                                       extras)
 
     def _print_next_turn(self) -> None:
         if self.__actual_turn != len(self.__tracks[1]):
@@ -218,7 +218,8 @@ class Renderer:
                     self.__tracks[drone.get_id()][self.__current_turn][0],
                     end=(
                         " "
-                        if self.__tracks[drone.get_id()][self.__current_turn][0]
+                        if self.__tracks[drone.get_id()][
+                            self.__current_turn][0]
                         != ""
                         else ""
                     ),
@@ -228,7 +229,7 @@ class Renderer:
 
     def _reset_map(self) -> None:
         for sprite in self.__still_sprites:
-            coords = self.__coords[sprite.get_name()]
+            coords = self.__coords[getattr(sprite, "get_name")()]
             extras = {"screen": self.__screen,
                       "font": self.__font,
                       "type": getattr(sprite,

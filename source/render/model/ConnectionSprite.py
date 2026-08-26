@@ -13,7 +13,7 @@ from ..pygame_utils import COLORS
 
 
 class ConnectionSprite(Sprite):
-    def __init__(self, name: str, hubs: list[str]) -> None:
+    def __init__(self, name: str) -> None:
         pygame.sprite.Sprite.__init__(self)
         self.__name: str = name
 
