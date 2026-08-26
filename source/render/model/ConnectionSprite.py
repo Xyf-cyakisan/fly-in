@@ -15,8 +15,11 @@ from ..pygame_utils import COLORS
 class ConnectionSprite(Sprite):
     def __init__(self, name: str, hubs: list[str]) -> None:
         pygame.sprite.Sprite.__init__(self)
-        self.name: str = name
-        self.hubs: list[str] = hubs
+        self.__name: str = name
+        self.__hubs: list[str] = hubs
+
+    def get_name(self) -> str:
+        return self.__name
 
     def draw(self, coordinates: tuple[float, float],
              extras: dict[str, Any]) -> None:

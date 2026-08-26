@@ -148,7 +148,7 @@ class Renderer:
     def _initialize_drones(self) -> None:
         for drone in self.__drones:
             drone.draw(
-                self.__coords[self.__start_hub.name],
+                self.__coords[self.__start_hub.get_name()],
                 {"screen": self.__screen,
                  "font": self.__font}
             )
@@ -190,7 +190,7 @@ class Renderer:
                                           "type",
                                           None),
                           "turn": self.__actual_turn}
-                sprite.update_capacity(self.__coords[sprite.name], extras)
+                sprite.update_capacity(self.__coords[sprite.get_name()], extras)
 
     def _print_next_turn(self) -> None:
         if self.__actual_turn != len(self.__tracks[1]):
@@ -202,7 +202,7 @@ class Renderer:
                 extras = {"screen": self.__screen,
                           "font": self.__font}
                 coords = self.__coords[
-                        self.__tracks[drone.id][self.__current_turn][1]
+                        self.__tracks[drone.get_id()][self.__current_turn][1]
                     ]
                 if isinstance(coords[0], tuple):
                     extras["coordinates"] = coords[1]
@@ -215,10 +215,10 @@ class Renderer:
             print(f"Turn {self.__current_turn + 1}: ", end="")
             for drone in self.__drones:
                 print(
-                    self.__tracks[drone.id][self.__current_turn][0],
+                    self.__tracks[drone.get_id()][self.__current_turn][0],
                     end=(
                         " "
-                        if self.__tracks[drone.id][self.__current_turn][0]
+                        if self.__tracks[drone.get_id()][self.__current_turn][0]
                         != ""
                         else ""
                     ),
@@ -228,7 +228,7 @@ class Renderer:
 
     def _reset_map(self) -> None:
         for sprite in self.__still_sprites:
-            coords = self.__coords[getattr(sprite, "name")]
+            coords = self.__coords[sprite.get_name()]
             extras = {"screen": self.__screen,
                       "font": self.__font,
                       "type": getattr(sprite,

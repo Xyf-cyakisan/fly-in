@@ -16,10 +16,13 @@ class HubSprite(Sprite):
     def __init__(self, name: str, capacity: list[str],
                  color: tuple[int, int, int] | str, hub_type: str) -> None:
         pygame.sprite.Sprite.__init__(self)
-        self.name: str = name
-        self.capacity: list[str] = capacity
-        self.color: tuple[int, int, int] | str = color
-        self.hub_type: str = hub_type
+        self.__name: str = name
+        self.__capacity: list[str] = capacity
+        self.__color: tuple[int, int, int] | str = color
+        self.__hub_type: str = hub_type
+
+    def get_name(self) -> str:
+        return self.__name
 
     def update_capacity(self, coordinates: tuple[float, float],
                         extras: dict[str, Any]) -> None:
@@ -31,7 +34,7 @@ class HubSprite(Sprite):
             font: pygame.font.Font = potential_font
         turn = extras.get("turn")
         if isinstance(turn, int):
-            text = font.render(self.capacity[turn], True,
+            text = font.render(self.__capacity[turn], True,
                                "white", "black")
             screen.blit(text, (coordinates[0] - 17.5, coordinates[1] - 60))
 
@@ -49,10 +52,10 @@ class HubSprite(Sprite):
             "restricted": "red",
             "blocked": "brown",
         }
-        around = COLORS[hub_type_color[self.hub_type]]
+        around = COLORS[hub_type_color[self.__hub_type]]
         pygame.draw.circle(screen, around, coordinates, 35)
-        if self.color != "rainbow":
-            pygame.draw.circle(screen, self.color, coordinates, 30)
+        if self.__color != "rainbow":
+            pygame.draw.circle(screen, self.__color, coordinates, 30)
         else:
             rainbow_colors = [
                 COLORS["red"],
@@ -65,6 +68,6 @@ class HubSprite(Sprite):
             ]
             for color, radius in zip(rainbow_colors, range(30, 0, -3)):
                 pygame.draw.circle(screen, color, coordinates, radius)
-        text = font.render(self.name, True, "white", "black")
+        text = font.render(self.__name, True, "white", "black")
         coords = (coordinates[0] - 35, coordinates[1] + 45)
         screen.blit(text, coords)
