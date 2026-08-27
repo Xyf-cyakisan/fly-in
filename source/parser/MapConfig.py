@@ -507,7 +507,7 @@ class MapConfig:
                 if isinstance(dict_content["metadata"][hub[0]], dict):
                     dict_content["metadata"][hub[0]]["max_drones"] = 1
                 else:
-                    dict_content["metadata"][hub[0]]["max_drones"] = {
+                    dict_content["metadata"][hub[0]] = {
                         "max_drones": 1}
         for connection in dict_content["connection"]:
             if isinstance(
