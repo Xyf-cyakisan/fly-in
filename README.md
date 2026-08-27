@@ -9,13 +9,13 @@ Fly-in is a 42 Common Core Python project about simulating drones traveling from
 More detailed description:
 
 As said previously, Fly-in is about drones going from a start to an end. However, it is definitely an oversimplification of how maps are built, here is a more in-depth look at the different elements composing a map:
-
+```
 Hub: defines a zone that drones can use as part of their route, both the start point and end point are hubs.
 
 Connection: defines a bidirectional link between two zones.
 
 Drones: active object going through the map as fast as possible.
-
+```
 These are the three main components of a map, but they can also have differents types of metadata precising their behavior in the simulation. Here's a look at all of the possibilites:
 
 Hub metadata:
