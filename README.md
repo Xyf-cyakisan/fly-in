@@ -39,6 +39,20 @@ Connection metadata:
 ```
 max_link_capacity: maximum number of drones allowed in the connection
 ```
+Map file example:
+```
+nb_drones: 4
+
+start_hub: start 0 0 [color=green]
+hub: bottleneck 1 0 [color=orange max_drones=2]
+hub: wide_area 2 0 [color=blue max_drones=3]
+end_hub: goal 3 0 [color=red]
+
+connection: start-bottleneck [max_link_capacity=4]
+connection: bottleneck-wide_area [max_link_capacity=4]
+connection: wide_area-goal [max_link_capacity=4]
+```
+
 Architecture of the project:
 
 ```
@@ -49,6 +63,7 @@ Controller                         (source/controller/Controller.py)            
   │       ├── Hub                  (source/model/Hub.py)                        — hub with type, capacity, coordinates
   │       ├── Connection           (source/model/connection.py)                 — link between hubs with throughput limit
   │       ├── Drone                (source/model/Drone.py)                      — object with id, path, place, going through hubs and connection to see the end of the map
+  │       ├── MovementError        (source/utils/MovementError.py)              — special error that is getting raised when a drone tries moving to non-available places
   │       └── Pathfinder           (source/model/Pathfinder.py)                 — weighted shortest path finder
   └── Renderer                     (source/renderer/Renderer.py)                — renders both graphical and text output, also creates Sprite inheriting classes for the graphical side
           ├── Sprite               (source/render/model/Sprite.py)             — abstract class possessing all of the needed attributs for shape drawing
