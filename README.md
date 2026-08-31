@@ -1,156 +1,246 @@
-*This project has been created as part of the 42 curriculum by cyakisan*
+*This project has been created as part of the 42 curriculum by cyakisan.*
 
-- Description:
+## Description
 
-Fly-in is a 42 Common Core Python project about simulating drones traveling from a starting point to an endpoint, turn by turn, through custom maps with specific rules and restrictions, while minimizing the total number of turns. The program first reads a .txt file containing the map configuration, then runs the simulation and guides the drones through the map. Finally, it displays a graphical representation of the simulation in a dedicated window.
+Fly-in is a 42 Common Core Python project about simulating drones traveling from a starting point to an endpoint, turn by turn, through custom maps with specific rules and restrictions, while minimizing the total number of turns.
 
-- In-depth look at the project:
+The program first reads a `.txt` file containing the map configuration, then runs the simulation and guides the drones through the map. Finally, it displays a graphical representation of the simulation in a dedicated window.
 
-More detailed description:
+## In-depth Look at the Project
 
-As said previously, Fly-in is about drones going from a start to an end. However, it is definitely an oversimplification of how maps are built, here is a more in-depth look at the different elements composing a map:
+### Map Components
+
+As mentioned previously, Fly-in is about moving drones from a starting point to an endpoint. However, this is a simplification of how maps are built. Here is a more detailed look at the different elements composing a map:
+
+```text
+Hub: defines a zone that drones can use as part of their route. Both the
+     starting point and endpoint are hubs. All hubs are required to have
+     a name and coordinates.
+
+Connection: defines a bidirectional link between two hubs.
+
+Drone: an active object traveling through the map as quickly as possible.
+       Each drone has a unique ID.
 ```
-Hub: defines a zone that drones can use as part of their route, both the start point and end point are hubs. All hubs are required to have a name and coordinates
 
-Connection: defines a bidirectional link between two zones
+These are the three main components of a map, but they can also have different types of metadata that specify their behavior during the simulation.
 
-Drones: active object going through the map as fast as possible, has an id
-```
-These are the three main components of a map, but they can also have differents types of metadata precising their behavior in the simulation. Here's a look at all of the possibilites:
+### Hub Metadata
 
-Hub metadata:
-
-```
-color: color of the drone in the graphical representation of the simulation
+```text
+color: color of the hub in the graphical representation of the simulation
 
 max_drones: maximum number of drones allowed in the hub
 
-zone: the 'type' of the hub, here are what each do:
+zone: the type of the hub. The available types are:
 
 normal: regular hub, by default
 
-priority: the hub must be prioritized in pathfinding if possible
+priority: hub that should be prioritized during pathfinding when possible
 
-restricted: it costs two turns to get to this hub, the drone will have to wait one turn in the connection
+restricted: it costs two turns to reach this hub; the drone spends one
+            turn in the connection before reaching it
 
-blocked: unaccessible hub
+blocked: inaccessible hub that drones cannot enter
 ```
-Connection metadata:
+
+### Connection Metadata
+
+```text
+max_link_capacity: maximum number of drones allowed to traverse the
+                   connection simultaneously
 ```
-max_link_capacity: maximum number of drones allowed in the connection
-```
-Map file example:
-```
+
+### Map File Example
+
+```text
 nb_drones: 4
 
 start_hub: start 0 0 [color=green]
+
 hub: bottleneck 1 0 [color=orange max_drones=2]
+
 hub: wide_area 2 0 [color=blue max_drones=3]
+
 end_hub: goal 3 0 [color=red]
 
 connection: start-bottleneck [max_link_capacity=4]
+
 connection: bottleneck-wide_area [max_link_capacity=4]
+
 connection: wide_area-goal [max_link_capacity=4]
 ```
-```
-<data_type>: <mandatory_data> [<metadata>] is the syntax used.
-```
-Architecture of the project:
 
-```
-Controller                         (source/controller/Controller.py)            — creates all primary objects and dictates their behaviors
-  ├── MapConfig                    (source/parser/MapConfig.py)                 — reads and validates the map file
-  ├── Simulation                   (source/model/Simulation.py)                 — creates all simulation related objects and dictates their behaviors
-  │       ├── Place                (source/model/Place.py)                      — duck typing class for Hub and Connection both being places that drones are going through
-  │       ├── Hub                  (source/model/Hub.py)                        — hub with type, capacity, coordinates
-  │       ├── Connection           (source/model/connection.py)                 — link between hubs with throughput limit
-  │       ├── Drone                (source/model/Drone.py)                      — object with id, path, place, going through hubs and connection to see the end of the map
-  │       ├── MovementError        (source/utils/MovementError.py)              — special error that is getting raised when a drone tries moving to non-available places
-  │       └── Pathfinder           (source/model/Pathfinder.py)                 — weighted shortest path finder (Dijkstra algorithm)
-  └── Renderer                     (source/renderer/Renderer.py)                — renders both graphical and text output, also creates Sprite inheriting classes for the graphical side
-          ├── Sprite               (source/render/model/Sprite.py)              — abstract class possessing all of the needed attributs for shape drawing
-          ├── ConnectionSprite     (source/render/model/ConnectionSprite.py)    — inherits from Sprite, graphical representation of the Connection class
-          ├── DroneSprite          (source/render/model/DroneSprite.py)         — inherits from Sprite, graphical representation of the Drone class
-          └── HubSprite            (source/render/model/HubSprite.py)           — inherits from Sprite, graphical representation of the Hub class
-```
-Now that this is established, let's have a deeper look at both the calculating and visual/output part of the project starting with calculating:
+The general syntax is:
 
-Calculating part:
-
-After creating all necessary objects and giving every drone the shortest path from start to end using a classical Dijkstra algorithm. It is the most logical choice for the project as different hub types shall take more or less turns to get to, so using the weighted logic of the Dijkstra makes the implementation of the logic of the project really easy. Combined with the catching of the MovementError, the program effeciently makes the drone use the fastest path possible, always respect maximum occupancy capabilities and able to switch path if faster options are possible.
-
-Output part:
-
-After all the drones reached the end hub, the Renderer object is created and given  tracks of the simulation and all the previously created objects to create sprite version of them. Using the pygame module, the program opens up a new window displaying a representation of the map with different shapes representing different roles:
+```text
+<data_type>: <mandatory_data> [<metadata>]
 ```
-drone: blue square with number (id) on it
-hub: circle of varying color
-connection: gray line linking two hubs
-```
-Combining these visuals with multiple keybinds (see Instructions) to progress the simulation however you want makes for an easily readable experience.
 
-The terminal also outputs each drone's movement every turn, example:
+### Project Architecture
+
+```text
+Controller                         (source/controller/Controller.py)
+— creates all primary objects and controls their behavior
+│
+├── MapConfig                      (source/parser/MapConfig.py)
+│   — reads and validates the map file
+│
+├── Simulation                     (source/model/Simulation.py)
+│   — creates all simulation-related objects and controls their behavior
+│   │
+│   ├── Place                      (source/model/Place.py)
+│   │   — duck-typing class used by both Hub and Connection, as both
+│   │     represent places through which drones can travel
+│   │
+│   ├── Hub                        (source/model/Hub.py)
+│   │   — represents a hub with a type, capacity, and coordinates
+│   │
+│   ├── Connection                  (source/model/connection.py)
+│   │   — represents a link between hubs with a throughput limit
+│   │
+│   ├── Drone                       (source/model/Drone.py)
+│   │   — represents a drone with an ID and a path, traveling through
+│   │     hubs and connections until it reaches the end of the map
+│   │
+│   ├── MovementError               (source/utils/MovementError.py)
+│   │   — custom exception raised when a drone attempts to move to
+│   │     an unavailable place
+│   │
+│   └── Pathfinder                  (source/model/Pathfinder.py)
+│       — weighted shortest-path finder using Dijkstra's algorithm
+│
+└── Renderer                        (source/renderer/Renderer.py)
+    — renders both graphical and text output and creates the sprites
+      used by the graphical interface
+    │
+    ├── Sprite                      (source/render/model/Sprite.py)
+    │   — abstract class containing the attributes required to draw
+    │     a shape
+    │
+    ├── ConnectionSprite             (source/render/model/ConnectionSprite.py)
+    │   — graphical representation of a Connection
+    │
+    ├── DroneSprite                  (source/render/model/DroneSprite.py)
+    │   — graphical representation of a Drone
+    │
+    └── HubSprite                    (source/render/model/HubSprite.py)
+        — graphical representation of a Hub
 ```
+
+## Calculating and Simulation
+
+After creating all necessary objects, each drone is assigned a shortest path from the start hub to the end hub using Dijkstra's algorithm.
+
+Dijkstra's algorithm is a suitable choice for this project because different hub types have different movement costs. In particular, entering a restricted hub costs two turns, while entering a normal or priority hub costs one turn. Using a weighted shortest-path algorithm makes it possible to take these movement costs into account when calculating routes.
+
+During the simulation, drones move along their assigned paths while respecting the occupancy limits of hubs and the capacity limits of connections. When a movement cannot be performed, a `MovementError` is raised and handled by the simulation so that the program can continue without crashing.
+
+This allows the simulation to respect the movement constraints while allowing drones to progress as soon as the required space becomes available.
+
+## Output and Visual Representation
+
+The `Renderer` is responsible for displaying the simulation and its results. Using the `pygame` module, the program opens a dedicated window displaying a visual representation of the map.
+
+The different elements are represented as follows:
+
+```text
+drone:      blue square displaying its ID
+hub:        circle whose color depends on the hub configuration
+connection: gray line connecting two hubs
+```
+
+The graphical representation makes it easier to understand the state of the simulation at a glance. The position of each drone can be followed throughout the map, while the hubs and connections make the structure of the network immediately visible.
+
+The simulation can also be controlled using several keyboard shortcuts (see the Instructions section), allowing the user to progress through the simulation turn by turn or restart it entirely.
+
+### Terminal Output
+
+The terminal also displays each drone's movement on every turn. For example:
+
+```text
 Turn 1: D1-waypoint1
 Turn 2: D1-waypoint2 D2-waypoint1
 Turn 3: D1-goal D2-waypoint2
 Turn 4: D2-goal
 ```
-```
-D<drone_id>-place_the_drone_moved_to is the syntax used.
-```
-Only moving drones are reported by this output.
 
-- Instructions:
+The syntax used is:
 
-Running the project is quite simple, in a terminal located at the root of this repository, use:
+```text
+D<drone_id>-<place_the_drone_moved_to>
+```
+
+Only drones that move during a given turn are reported.
+
+## Instructions
+
+Running the project is simple. From a terminal located at the root of the repository, run:
 
 ```bash
 make install
 ```
-(To install the dependencies needed for the project to run).
 
-Then:
+This installs the dependencies required to run the project.
+
+Then run:
 
 ```bash
-make run MAP='path of the map'
+make run MAP='path/to/the/map'
 ```
-(To run the program with the chosen map, a few are already given by the subject and are found at the root of this repository).
+
+This launches the program using the selected map. Several map files are already provided with the project.
+
+### Controls
 
 While the program is running:
-```
-SPACE: to advance to the next turn
-R: restarts the simulation completely
-ESCAPE: closes the program
+
+```text
+SPACE:  advance to the next turn
+R:      restart the simulation completely
+ESC:    close the program
 ```
 
-Here are other bash commands if needed:
+### Other Commands
+
+Clean the cache files generated during execution:
 
 ```bash
 make clean
 ```
-(Destroys all newly created cache files during runtime for a fresh start).
+
+Clean the cache files and remove the virtual environment:
 
 ```bash
 make fclean
 ```
-(The same as clean except it also suppresses all the virtual environnement related files).
+
+Check the project using Flake8 and Mypy:
 
 ```bash
 make lint
 ```
-(Checks flake8 and mypy norm).
+
+Run the same checks with Mypy's strict mode enabled:
 
 ```bash
 make lint-strict
 ```
-(The same as lint except mypy runs with the --strict flag).
+
+Run the program using Python's built-in debugger:
 
 ```bash
 make debug
 ```
-(Runs the program with the debugger tool pdb)
 
-- Resources:
+## Resources
 
-Only resource used for this project was AI which was only used for learning about pygame and the Dijkstra algorithm.
+The main external resource used during this project was AI assistance.
+
+AI was used as a learning and research tool, mainly for:
+
+* understanding how `pygame` works and how to implement the graphical representation;
+* understanding Dijkstra's algorithm and its application to weighted graphs;
+* clarifying Python concepts encountered during the implementation.
+
+AI-generated information was used only after being reviewed and tested to ensure that it was understood and correctly integrated into the project.
