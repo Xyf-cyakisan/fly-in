@@ -53,7 +53,7 @@ connection: bottleneck-wide_area [max_link_capacity=4]
 connection: wide_area-goal [max_link_capacity=4]
 ```
 ```
-<data_type>: <mandatory_data> <metadata> is the syntax used.
+<data_type>: <mandatory_data> [<metadata>] is the syntax used.
 ```
 Architecture of the project:
 
