@@ -242,5 +242,6 @@ AI was used as a learning and research tool, mainly for:
 * understanding how `pygame` works and how to implement the graphical representation;
 * understanding Dijkstra's algorithm and its application to weighted graphs;
 * clarifying Python concepts encountered during the implementation.
+* this README
 
 AI-generated information was used only after being reviewed and tested to ensure that it was understood and correctly integrated into the project.
