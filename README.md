@@ -96,6 +96,9 @@ Turn 2: D1-waypoint2 D2-waypoint1
 Turn 3: D1-goal D2-waypoint2
 Turn 4: D2-goal
 ```
+```
+D<drone_id>-place_the_drone_moved_to
+```
 Only moving drones are reported by this output.
 
 - Instructions:
