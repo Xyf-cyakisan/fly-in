@@ -10,7 +10,7 @@ More detailed description:
 
 As said previously, Fly-in is about drones going from a start to an end. However, it is definitely an oversimplification of how maps are built, here is a more in-depth look at the different elements composing a map:
 ```
-Hub: defines a zone that drones can use as part of their route, both the start point and end point are hubs.
+Hub: defines a zone that drones can use as part of their route, both the start point and end point are hubs. All hubs are required to have a name and coordinates.
 
 Connection: defines a bidirectional link between two zones.
 
@@ -52,6 +52,7 @@ connection: start-bottleneck [max_link_capacity=4]
 connection: bottleneck-wide_area [max_link_capacity=4]
 connection: wide_area-goal [max_link_capacity=4]
 ```
+<data type>: <mandatory data> [<metadata>] is the syntax used.
 
 Architecture of the project:
 
